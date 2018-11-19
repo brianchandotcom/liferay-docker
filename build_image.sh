@@ -178,11 +178,7 @@ function main {
 		secondary_docker_image_tag=liferay/${docker_image_name}:${release_branch}
 	fi
 
-	if [ "$(uname)" == "Darwin" ]; then
-		local build_date=$(os_date "%Y-%m-%dT%H:%M:%SZ")
-	elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
-		local build_date=$(os_date "%Y-%m-%dT%H:%M:%SZ")
-	fi
+	local build_date=$(os_date "%Y-%m-%dT%H:%M:%SZ")
 
 	docker build \
 		--build-arg LABEL_BUILD_DATE=${build_date} \
