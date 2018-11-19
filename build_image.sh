@@ -179,9 +179,9 @@ function main {
 	fi
 
 	if [ "$(uname)" == "Darwin" ]; then
-		local build_date=$(date -v +0d +'%Y-%m-%dT%H:%M:%SZ')
+		local build_date=$(os_date "%Y-%m-%dT%H:%M:%SZ")
 	elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
-		local build_date=$(date -d "${current_date}" +'%Y-%m-%dT%H:%M:%SZ')
+		local build_date=$(os_date "%Y-%m-%dT%H:%M:%SZ")
 	fi
 
 	docker build \
