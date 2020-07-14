@@ -1,0 +1,29 @@
+FROM liferay/dxp:7.3.10-ep4
+
+ENV TAG="7.3.3-ga4"
+
+WORKDIR /opt/liferay/deploy
+
+RUN curl -O "$(wget -q -O- https://raw.githubusercontent.com/liferay/liferay-portal/$TAG/modules/.releng/apps/dynamic-data-mapping/dynamic-data-mapping-demo-data-creator-api/artifact.properties | sed -n 's/artifact.url=//p')"
+RUN curl -O "$(wget -q -O- https://raw.githubusercontent.com/liferay/liferay-portal/$TAG/modules/.releng/apps/dynamic-data-mapping/dynamic-data-mapping-demo-data-creator-impl/artifact.properties | sed -n 's/artifact.url=//p')"
+RUN curl -O "$(wget -q -O- https://raw.githubusercontent.com/liferay/liferay-portal/$TAG/modules/.releng/apps/portal-workflow/portal-workflow-kaleo-demo-data-creator-api/artifact.properties | sed -n 's/artifact.url=//p')"
+RUN curl -O "$(wget -q -O- https://raw.githubusercontent.com/liferay/liferay-portal/$TAG/modules/.releng/apps/portal-workflow/portal-workflow-kaleo-demo-data-creator-impl/artifact.properties | sed -n 's/artifact.url=//p')"
+RUN curl -O "$(wget -q -O- https://raw.githubusercontent.com/liferay/liferay-portal/$TAG/modules/.releng/apps/users-admin/users-admin-demo-data-creator-api/artifact.properties | sed -n 's/artifact.url=//p')"
+RUN curl -O "$(wget -q -O- https://raw.githubusercontent.com/liferay/liferay-portal/$TAG/modules/.releng/apps/users-admin/users-admin-demo-data-creator-impl/artifact.properties | sed -n 's/artifact.url=//p')"
+RUN curl -O "$(wget -q -O- https://raw.githubusercontent.com/liferay/liferay-portal/$TAG/modules/.releng/dxp/apps/portal-workflow/portal-workflow-metrics-demo-data-creator-api/artifact.properties | sed -n 's/artifact.url=//p')"
+RUN curl -O "$(wget -q -O- https://raw.githubusercontent.com/liferay/liferay-portal/$TAG/modules/.releng/dxp/apps/portal-workflow/portal-workflow-metrics-demo-data-creator-impl/artifact.properties | sed -n 's/artifact.url=//p')"
+RUN curl -O "$(wget -q -O- https://raw.githubusercontent.com/liferay/liferay-portal/$TAG/modules/.releng/dxp/apps/portal-workflow/portal-workflow-metrics-demo/artifact.properties | sed -n 's/artifact.url=//p')"
+
+ENTRYPOINT /usr/local/bin/liferay_entrypoint.sh
+
+EXPOSE 8000 8009 8080 11311
+
+HEALTHCHECK \
+	--interval=2m \
+	--start-period=2m \
+	--timeout=2m \
+	CMD curl -fsS "http://localhost:8080/c/portal/layout" || exit 1
+    
+USER liferay:liferay
+
+WORKDIR /opt/liferay
