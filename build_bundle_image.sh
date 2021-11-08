@@ -3,23 +3,6 @@
 source ./_common.sh
 
 function build_docker_image {
-	local docker_image_name
-	local label_name
-
-	if [[ ${RELEASE_FILE_NAME} == *-dxp-* ]] || [[ ${RELEASE_FILE_NAME} == *-private* ]]
-	then
-		docker_image_name="dxp"
-		label_name="Liferay DXP"
-	elif [[ ${RELEASE_FILE_NAME} == *-portal-* ]]
-	then
-		docker_image_name="portal"
-		label_name="Liferay Portal"
-	else
-		echo "${RELEASE_FILE_NAME} is an unsupported release file name."
-
-		exit 1
-	fi
-
 	if [[ ${LIFERAY_DOCKER_RELEASE_FILE_URL%} == */snapshot-* ]]
 	then
 		docker_image_name=${docker_image_name}-snapshot
@@ -119,6 +102,22 @@ function build_docker_image {
 		"${TEMP_DIR}"
 }
 
+function check_release {
+	if [[ ${RELEASE_FILE_NAME} == *-dxp-* ]] || [[ ${RELEASE_FILE_NAME} == *-private* ]]
+	then
+		docker_image_name="dxp"
+		label_name="Liferay DXP"
+	elif [[ ${RELEASE_FILE_NAME} == *-portal-* ]]
+	then
+		docker_image_name="portal"
+		label_name="Liferay Portal"
+	else
+		echo "${RELEASE_FILE_NAME} is an unsupported release file name."
+
+		exit 1
+	fi
+}
+
 function check_usage {
 	if [ ! -n "${LIFERAY_DOCKER_RELEASE_FILE_URL}" ]
 	then
@@ -142,11 +141,14 @@ function check_usage {
 }
 
 function download_trial_dxp_license {
-	rm -fr "${TEMP_DIR}/liferay/data/license"
-
-	if (! ./download_trial_dxp_license.sh "${TEMP_DIR}/liferay" $(date "${CURRENT_DATE}" "+%s000"))
+	if [[ ${docker_image_name} == "dxp" ]]
 	then
-		exit 4
+		rm -fr "${TEMP_DIR}/liferay/data/license"
+
+		if (! ./download_trial_dxp_license.sh "${TEMP_DIR}/liferay" $(date "${CURRENT_DATE}" "+%s000"))
+		then
+			exit 4
+		fi
 	fi
 }
 
@@ -175,6 +177,8 @@ function main {
 	make_temp_directory templates/bundle
 
 	prepare_temp_directory "${@}"
+
+	check_release "${@}"
 
 	update_patching_tool
 
