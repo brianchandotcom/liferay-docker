@@ -80,12 +80,12 @@ function build_docker_image {
 	do
 		if [[ ${LIFERAY_DOCKER_RELEASE_FILE_URL%} == */snapshot-* ]]
 		then
-			DOCKER_IMAGE_TAGS+=("liferay/${DOCKER_IMAGE_NAME}:${release_branch}-${release_version_single}-${release_hash}")
-			DOCKER_IMAGE_TAGS+=("liferay/${DOCKER_IMAGE_NAME}:${release_branch}-$(date "${CURRENT_DATE}" "+%Y%m%d")")
-			DOCKER_IMAGE_TAGS+=("liferay/${DOCKER_IMAGE_NAME}:${release_branch}")
+			DOCKER_IMAGE_TAGS+=("${DOCKER_REPOSITORY}liferay/${DOCKER_IMAGE_NAME}:${release_branch}-${release_version_single}-${release_hash}")
+			DOCKER_IMAGE_TAGS+=("${DOCKER_REPOSITORY}liferay/${DOCKER_IMAGE_NAME}:${release_branch}-$(date "${CURRENT_DATE}" "+%Y%m%d")")
+			DOCKER_IMAGE_TAGS+=("${DOCKER_REPOSITORY}liferay/${DOCKER_IMAGE_NAME}:${release_branch}")
 		else
-			DOCKER_IMAGE_TAGS+=("liferay/${DOCKER_IMAGE_NAME}:${release_version_single}-d$(./release_notes.sh get-version)-${TIMESTAMP}")
-			DOCKER_IMAGE_TAGS+=("liferay/${DOCKER_IMAGE_NAME}:${release_version_single}")
+			DOCKER_IMAGE_TAGS+=("${DOCKER_REPOSITORY}liferay/${DOCKER_IMAGE_NAME}:${release_version_single}-d$(./release_notes.sh get-version)-${TIMESTAMP}")
+			DOCKER_IMAGE_TAGS+=("${DOCKER_REPOSITORY}liferay/${DOCKER_IMAGE_NAME}:${release_version_single}")
 		fi
 	done
 
