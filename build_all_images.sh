@@ -517,6 +517,34 @@ function build_bundle_images_dxp_73 {
 
 function build_bundle_images_dxp_74 {
 	build_bundle_image \
+		7.4.13-ga1 \
+		files.liferay.com/private/ee/portal/7.4.13/liferay-dxp-tomcat-7.4.13-ga1-20211020105546063.7z
+
+	build_bundle_image \
+		7.4.13-u1 \
+		files.liferay.com/private/ee/portal/7.4.13-u1/liferay-dxp-tomcat-7.4.13.u1-20211221182705869.7z
+
+	build_bundle_image \
+		7.4.13-u2 \
+		files.liferay.com/private/ee/portal/7.4.13-u2/liferay-dxp-tomcat-7.4.13.u2-20211227131245875.7z
+
+	build_bundle_image \
+		7.4.13-u3 \
+		files.liferay.com/private/ee/portal/7.4.13-u3/liferay-dxp-tomcat-7.4.13.u3-20220107093409925.7z
+
+	build_bundle_image \
+		7.4.13-u4 \
+		files.liferay.com/private/ee/portal/7.4.13-u4/liferay-dxp-tomcat-7.4.13.u4-20220117185526445.7z
+
+	build_bundle_image \
+		7.4.13-u5 \
+		files.liferay.com/private/ee/portal/7.4.13-u5/liferay-dxp-tomcat-7.4.13.u5-20220125192936842.7z
+
+	build_bundle_image \
+		7.4.13-u6 \
+		files.liferay.com/private/ee/portal/7.4.13-u6/liferay-dxp-tomcat-7.4.13.u6-20220130175152574.7z
+
+	build_bundle_image \
 		7.4.13-u7 \
 		files.liferay.com/private/ee/portal/7.4.13-u7/liferay-dxp-tomcat-7.4.13.u7-20220207104708635.7z
 
