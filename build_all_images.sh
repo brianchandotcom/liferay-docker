@@ -5,27 +5,17 @@ source ./_common.sh
 BUILD_ALL_IMAGES_PUSH=${1}
 
 function build_base_image {
-	local base_image_version=$(docker image inspect --format '{{index .Config.Labels "org.label-schema.version"}}' liferay/base:latest)
-
-	if [[ ${base_image_version} == $(./release_notes.sh get-version) ]]
-	then
-		return
-	fi
-
-	log_in_to_docker_hub
-
-	docker pull liferay/base:latest
-
-	base_image_version=$(docker image inspect --format '{{index .Config.Labels "org.label-schema.version"}}' liferay/base:latest)
-
-	if [[ ${base_image_version} == $(./release_notes.sh get-version) ]]
-	then
-		return
-	fi
 
 	echo ""
 	echo "Building Docker image base."
 	echo ""
+
+	if [[ "${LIFERAY_DOCKER_DEVELOPER_MODE}" != "true" ]] && [[ $(get_latest_release_version "base") == $(./release_notes.sh get-version) ]]
+	then
+		echo "Latest image version matches with local release version."
+
+		return
+	fi
 
 	time ./build_base_image.sh "${BUILD_ALL_IMAGES_PUSH}" | tee -a "${LOGS_DIR}"/base.log
 
@@ -131,6 +121,52 @@ function build_bundle_images {
 	fi
 }
 
+function build_jdk11_image {
+	local jdk11_image_version=1.0
+
+	echo ""
+	echo "Building Docker image JDK11."
+	echo ""
+
+	time ./build_jdk11_image.sh "${BUILD_ALL_IMAGES_PUSH}" | tee -a "${LOGS_DIR}"/jdk11.log
+
+	if [ "${PIPESTATUS[0]}" -gt 0 ]
+	then
+		echo "FAILED: JDK11" >> "${LOGS_DIR}/results"
+
+		exit 1
+	else
+		echo "SUCCESS: JDK11" >> "${LOGS_DIR}/results"
+	fi
+}
+
+function build_jdk11_jdk8_image {
+	local jdk11_jdk8_image_version=1.0
+
+	echo ""
+	echo "Building Docker image JDK11-JDK8."
+	echo ""
+
+	time ./build_jdk11_jdk8_image.sh "${BUILD_ALL_IMAGES_PUSH}" | tee -a "${LOGS_DIR}"/jdk11_jdk8.log
+
+	if [ "${PIPESTATUS[0]}" -gt 0 ]
+	then
+		echo "FAILED: JDK11-JDK8" >> "${LOGS_DIR}/results"
+
+		exit 1
+	else
+		echo "SUCCESS: JDK11-JDK8" >> "${LOGS_DIR}/results"
+	fi
+}
+
+function get_latest_release_version {
+	local token=$(curl -s "https://auth.docker.io/token?service=registry.docker.io&scope=repository:liferay/${1}:pull" | jq -r '.token')
+
+	local version=$(curl -s  -H "Authorization: Bearer $token" "https://registry-1.docker.io/v2/liferay/${1}/manifests/latest" | grep -o '\\"org.label-schema.version\\":\\"[0-9]\.[0-9]\.[0-9]*\\"' | sed 's/\\"//g' | sed 's:.*\:::')
+
+	echo "${version}"
+}
+
 function get_main_key {
 	local main_keys=${1}
 	local version=${2}
@@ -168,6 +204,10 @@ function main {
 	mkdir -p "${LOGS_DIR}"
 
 	build_base_image
+
+	build_jdk11_image
+
+	build_jdk11_jdk8_image
 
 	build_bundle_images
 
