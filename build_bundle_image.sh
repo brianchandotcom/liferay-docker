@@ -105,7 +105,14 @@ function build_docker_image {
 		--build-arg LABEL_VCS_URL="https://github.com/liferay/liferay-docker" \
 		--build-arg LABEL_VERSION="${label_version}" \
 		$(get_docker_image_tags_args "${DOCKER_IMAGE_TAGS[@]}") \
-		"${TEMP_DIR}"
+		"${TEMP_DIR}" || exit 1
+}
+
+function check_legacy_release {
+	if [ "$(echo "${LIFERAY_DOCKER_RELEASE_VERSION%-*}" | sed 's/\.//g' )" -le 7310 ]
+	then
+		sed -i 's/liferay\/jdk11:latest/liferay\/jdk11-jdk8:latest/g' "${TEMP_DIR}"/Dockerfile
+	fi
 }
 
 function check_release {
@@ -131,6 +138,7 @@ function check_usage {
 		echo ""
 		echo "The script reads the following environment variables:"
 		echo ""
+		echo "    LIFERAY_DOCKER_DEVELOPER_MODE (optional): If set to \"true\" all local images will be deleted before building a one."
 		echo "    LIFERAY_DOCKER_FIX_PACK_URL (optional): URL to a fix pack"
 		echo "    LIFERAY_DOCKER_HUB_TOKEN (optional): Docker Hub token to log in automatically"
 		echo "    LIFERAY_DOCKER_HUB_USERNAME (optional): Docker Hub username to log in automatically"
@@ -184,6 +192,8 @@ function main {
 	check_usage "${@}"
 
 	make_temp_directory templates/bundle
+
+	check_legacy_release
 
 	prepare_temp_directory "${@}"
 
