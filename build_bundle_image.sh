@@ -213,7 +213,7 @@ function main {
 
 	log_in_to_docker_hub
 
-	push_docker_images "${1}"
+	push_image "${1}"
 
 	clean_up_temp_directory
 }
@@ -239,6 +239,24 @@ function prepare_temp_directory {
 	fi
 
 	mv "${TEMP_DIR}/liferay-"* "${TEMP_DIR}/liferay"
+}
+
+function push_image {
+	check_buildx
+
+	if [ "${1}" == "push" ]
+	then
+		docker buildx build --push --platform "${DOCKER_IMAGE_PLATFORMS}" \
+			--build-arg LABEL_BUILD_DATE=$(date "${CURRENT_DATE}" "+%Y-%m-%dT%H:%M:%SZ") \
+			--build-arg LABEL_LIFERAY_VCS_REF="${liferay_vcs_ref}" \
+			--build-arg LABEL_NAME="${DOCKER_LABEL_NAME}" \
+			--build-arg LABEL_TOMCAT_VERSION=$(get_tomcat_version "${TEMP_DIR}/liferay") \
+			--build-arg LABEL_VCS_REF=$(git rev-parse HEAD) \
+			--build-arg LABEL_VCS_URL="https://github.com/liferay/liferay-docker" \
+			--build-arg LABEL_VERSION="${label_version}" \
+			$(get_docker_image_tags_args "${DOCKER_IMAGE_TAGS[@]}") \
+			"${TEMP_DIR}" || exit 1
+	fi
 }
 
 function update_patching_tool {

@@ -51,6 +51,7 @@ function generate_release_notes {
 }
 
 function get_change_log {
+	return
 	RELEASE_NOTES_CURRENT_SHA=$(git log -1 --pretty=%H)
 
 	RELEASE_NOTES_CHANGE_LOG=$(git log --grep "^DOCKER-" --pretty=%s "${RELEASE_NOTES_LATEST_SHA}..${RELEASE_NOTES_CURRENT_SHA}" | sed -e "s/\ .*/ /" | uniq | tr -d "\n" | tr -d "\r" | sed -e "s/ $//")
