@@ -155,8 +155,6 @@ function prepare_tomcat {
 
 	configure_tomcat
 
-	warm_up_tomcat
-
 	rm -fr "${TEMP_DIR}"/liferay/logs/*
 	rm -fr "${TEMP_DIR}"/liferay/tomcat/logs/*
 }
@@ -230,33 +228,5 @@ function test_docker_image {
 		echo "Testing failed, exiting."
 
 		exit 2
-	fi
-}
-
-function warm_up_tomcat {
-
-	#
-	# Warm up Tomcat for older versions to speed up starting Tomcat. Populating
-	# the Hypersonic files can take over 20 seconds.
-	#
-
-	if [ -d "${TEMP_DIR}/liferay/data/hsql" ]
-	then
-		if [ $(stat "${TEMP_DIR}/liferay/data/hsql/lportal.script") -lt 1024000 ]
-		then
-			start_tomcat
-		else
-			echo Tomcat is already warmed up.
-		fi
-	fi
-
-	if [ -d "${TEMP_DIR}/liferay/data/hypersonic" ]
-	then
-		if [ $(stat "${TEMP_DIR}/liferay/data/hypersonic/lportal.script") -lt 1024000 ]
-		then
-			start_tomcat
-		else
-			echo Tomcat is already warmed up.
-		fi
 	fi
 }
