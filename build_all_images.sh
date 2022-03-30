@@ -5,20 +5,10 @@ source ./_common.sh
 BUILD_ALL_IMAGES_PUSH=${1}
 
 function build_base_image {
-	local base_image_version=$(docker image inspect --format '{{index .Config.Labels "org.label-schema.version"}}' liferay/base:latest)
-
-	if [[ ${base_image_version} == $(./release_notes.sh get-version) ]]
-	then
-		return
-	fi
 
 	log_in_to_docker_hub
 
-	docker pull liferay/base:latest
-
-	base_image_version=$(docker image inspect --format '{{index .Config.Labels "org.label-schema.version"}}' liferay/base:latest)
-
-	if [[ ${base_image_version} == $(./release_notes.sh get-version) ]]
+	if [[ $(get_latest_release_version "base") == $(./release_notes.sh get-version) ]]
 	then
 		return
 	fi
@@ -130,6 +120,15 @@ function build_bundle_images {
 		fi
 	fi
 }
+
+function get_latest_release_version {
+	local token=$(curl -s "https://auth.docker.io/token?service=registry.docker.io&scope=repository:liferay/${1}:pull" | jq -r '.token')
+
+	local version=$(curl -s  -H "Authorization: Bearer $token" "https://registry-1.docker.io/v2/liferay/${1}/manifests/latest" | grep -o '\\"org.label-schema.version\\":\\"[0-9]\.[0-9]\.[0-9]*\\"' | sed 's/\\"//g' | sed 's:.*\:::')
+
+	echo "${version}"
+}
+
 
 function get_main_key {
 	local main_keys=${1}
