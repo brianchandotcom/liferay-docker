@@ -7,7 +7,7 @@ BUILD_ALL_IMAGES_PUSH=${1}
 function build_base_image {
 	local base_image_version=$(docker image inspect --format '{{index .Config.Labels "org.label-schema.version"}}' liferay/base:latest)
 
-	if [[ ${base_image_version} == $(./release_notes.sh get-version) ]]
+	if [[ "${LIFERAY_DOCKER_DEVELOPER_MODE}" != "true" ]] && [[ ${base_image_version} == $(./release_notes.sh get-version) ]]
 	then
 		return
 	fi
@@ -18,8 +18,10 @@ function build_base_image {
 
 	base_image_version=$(docker image inspect --format '{{index .Config.Labels "org.label-schema.version"}}' liferay/base:latest)
 
-	if [[ ${base_image_version} == $(./release_notes.sh get-version) ]]
+	if [[ "${LIFERAY_DOCKER_DEVELOPER_MODE}" != "true" ]] && [[ ${base_image_version} == $(./release_notes.sh get-version) ]]
 	then
+		echo "Latest image version matches with local release version."
+
 		return
 	fi
 
