@@ -109,7 +109,7 @@ function build_docker_image {
 }
 
 function check_legacy_release {
-	if [ "$(echo "${LIFERAY_DOCKER_RELEASE_VERSION%-*}" | sed 's/\.//g' )" -le 7310 ]
+	if [ "$(echo "${LIFERAY_DOCKER_RELEASE_VERSION%-*}" | cut -f1,2,3 -d'.' | cut -f1 -d '-' | sed 's/\.//g' )" -le 7310 ]
 	then
 		sed -i 's/liferay\/jdk11:latest/liferay\/jdk11-jdk8:latest/g' "${TEMP_DIR}"/Dockerfile
 	fi
