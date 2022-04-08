@@ -153,6 +153,12 @@ function check_usage {
 	check_utils 7z curl docker java unzip
 }
 
+function configure_ffmpeg {
+	echo 'enabled="true"' > "${TEMP_DIR}/liferay/osgi/configs/com.liferay.document.library.preview.audio.internal.configuration.DLAudioFFMPEGAudioConverterConfiguration.config"
+
+	echo 'enabled="true"' > "${TEMP_DIR}/liferay/osgi/configs/com.liferay.document.library.video.internal.configuration.DLVideoFFMPEGVideoConverterConfiguration.config"
+}
+
 function download_trial_dxp_license {
 	if [[ ${DOCKER_IMAGE_NAME} == "dxp" ]]
 	then
@@ -192,6 +198,8 @@ function main {
 	set_parent_image
 
 	prepare_temp_directory "${@}"
+
+	configure_ffmpeg
 
 	check_release "${@}"
 
