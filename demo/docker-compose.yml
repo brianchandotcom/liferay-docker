@@ -1,0 +1,51 @@
+version: '3.9'
+services:
+  search:
+    container_name: search
+    environment:
+      - discovery.type=single-node
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    build:
+      context: ./
+      dockerfile: ES-Dockerfile
+    healthcheck:
+      test: curl localhost:9200/_cat/health | grep green
+      interval: 40s
+      timeout: 5s
+      retries: 3
+  database:
+    container_name: database
+    image: "mariadb:10.4"
+    environment:
+      - MARIADB_ROOT_PASSWORD=UglyDuckling
+      - MARIADB_ROOT_HOST=%
+      - MARIADB_DATABASE=lportal
+      - MARIADB_USER=user
+      - MARIADB_PASSWORD=password
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci --character-set-filesystem=utf8mb4 --max_allowed_packet=256M --disable-ssl
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: mysqladmin ping -h 127.0.0.1 -u user --password=password
+      interval: 40s
+      timeout: 5s
+      retries: 3
+  liferay:
+    container_name: liferay
+    image: liferay/dxp:7.4.13-u21
+    depends_on:
+      search:
+        condition: service_healthy
+      database:
+        condition: service_healthy
+    environment:
+      - LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_DRIVER_UPPERCASEC_LASS_UPPERCASEN_AME=org.mariadb.jdbc.Driver
+      - LIFERAY_SETUP_PERIOD_DATABASE_PERIOD_JAR_PERIOD_URL_OPENBRACKET_COM_PERIOD_MYSQL_PERIOD_CJ_PERIOD_JDBC_PERIOD__UPPERCASED_RIVER_CLOSEBRACKET_=https://repo1.maven.org/maven2/org/mariadb/jdbc/mariadb-java-client/3.0.4/mariadb-java-client-3.0.4.jar
+      - LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_URL=jdbc:mariadb://database/lportal?characterEncoding=UTF-8&dontTrackOpenResources=true&holdResultsOpenOverStatementClose=true&serverTimezone=GMT&useFastDateParsing=false&useUnicode=true&useSSL=false
+      - LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_USERNAME=root
+      - LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_PASSWORD=UglyDuckling
+      - LIFERAY_CLUSTER_PERIOD_LINK_PERIOD_ENABLED=false
+    ports:
+      - "8080:8080"

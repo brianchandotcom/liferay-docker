@@ -153,6 +153,39 @@ function check_usage {
 	check_utils 7z curl docker java unzip
 }
 
+function configure_es_sidecar {
+	if [ -e "${TEMP_DIR}/liferay/elasticsearch7" ]
+	then
+		local es_folder="${TEMP_DIR}/liferay/elasticsearch7"
+	elif [ -e "${TEMP_DIR}/liferay/elasticsearch-sidecar" ]
+	then
+		local es_folder="${TEMP_DIR}/liferay/elasticsearch-sidecar"
+	fi
+
+	if [ -n "${es_folder}" ]
+	then
+		echo ""
+		echo "Removing elasticsearch sidecar"
+		echo ""
+
+		rm -rf "${es_folder}"
+
+		local string="ENV LIFERAY_CONFIGURATION_PERIOD_OVERRIDE_PERIOD_COM_PERIOD_LIFERAY_PERIOD_PORTAL_PERIOD_SEARCH_PERIOD_ELASTICSEARCH_NUMBER7__PERIOD_CONFIGURATION_PERIOD__UPPERCASEE_LASTICSEARCH_UPPERCASEC_ONFIGURATION_UNDERLINE_OPERATION_UPPERCASEM_O='\"REMOTE\"'"
+
+		string="${string}\nENV LIFERAY_CONFIGURATION_PERIOD_OVERRIDE_PERIOD_COM_PERIOD_LIFERAY_PERIOD_PORTAL_PERIOD_SEARCH_PERIOD_ELASTICSEARCH_NUMBER7__PERIOD_CONFIGURATION_PERIOD__UPPERCASEE_LASTICSEARCH_UPPERCASEC_ONFIGURATION_UNDERLINE_PRODUCTION_UPPERCASEM_ODE_UPPERCASEE_NABLED='\"true\"'"
+
+		string="${string}\nENV LIFERAY_CONFIGURATION_PERIOD_OVERRIDE_PERIOD_COM_PERIOD_LIFERAY_PERIOD_PORTAL_PERIOD_SEARCH_PERIOD_ELASTICSEARCH_NUMBER7__PERIOD_CONFIGURATION_PERIOD__UPPERCASEE_LASTICSEARCH_UPPERCASEC_ONFIGURATION_UNDERLINE_NETWORK_UPPERCASEH_OST_UPPERCASEA_DDRESSES='\"http://search:9200\"'"
+
+		local line_number=$(sed -n '/ENV /=' "${TEMP_DIR}"/Dockerfile | head -n1)
+
+		local new_string=$(head -n $line_number "${TEMP_DIR}"/Dockerfile; echo -e "${string}"; tail -n +$((line_number+1)) "${TEMP_DIR}"/Dockerfile;)
+
+		echo -e "${new_string}" > "${TEMP_DIR}"/Dockerfile
+
+		cp "${TEMP_DIR}"/Dockerfile /tmp/Dockerfile
+	fi
+}
+
 function download_trial_dxp_license {
 	if [[ ${DOCKER_IMAGE_NAME} == "dxp" ]]
 	then
@@ -192,6 +225,8 @@ function main {
 	set_parent_image
 
 	prepare_temp_directory "${@}"
+
+	configure_es_sidecar
 
 	check_release "${@}"
 
