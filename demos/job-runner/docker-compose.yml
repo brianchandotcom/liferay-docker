@@ -1,0 +1,7 @@
+version: '3.9'
+services:
+  job-runner:
+    container_name: job-runner
+    image: liferay/job-runner:latest
+    volumes:
+      - ./files:/mnt/liferay/
