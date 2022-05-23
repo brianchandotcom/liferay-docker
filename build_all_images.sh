@@ -80,7 +80,6 @@ function build_bundle_image {
 }
 
 function build_bundle_images {
-
 	#
 	# LIFERAY_DOCKER_IMAGE_FILTER="7.2.10-dxp-1 " ./build_all_images.sh
 	# LIFERAY_DOCKER_IMAGE_FILTER=7.2.10 ./build_all_images.sh
@@ -99,14 +98,19 @@ function build_bundle_images {
 
 	if [[ "${search_output}" != "null" ]]
 	then
-		local versions=$(echo "${search_output}" | grep '^.*:$' | sed 's/://')
+		if [[ $(yq .\""${specified_version}"\".bundle_url < bundles.yml) != "null" ]]
+		then
+			build_bundle_image ".\""${specified_version}"\"" "${specified_version}"
+		else
+			local versions=$(echo "${search_output}" | grep '^.*:$' | sed 's/://')
 
-		for version in ${versions}
-		do
-			local query=.\"$(get_main_key "${main_keys}" "${version}")\".\"${version}\"
+			for version in ${versions}
+			do
+				local query=.\"$(get_main_key "${main_keys}" "${version}")\".\"${version}\"
 
-			build_bundle_image "${query}" "${version}"
-		done
+				build_bundle_image "${query}" "${version}"
+			done
+		fi
 	else
 		local main_key=$(get_main_key "${main_keys}" "${specified_version}")
 
