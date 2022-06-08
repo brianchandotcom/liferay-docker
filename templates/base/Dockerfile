@@ -1,7 +1,7 @@
 FROM --platform=${TARGETPLATFORM} ubuntu:jammy AS ubuntu-jammy
 
 RUN apt-get update && \
-	apt-get install -y bash curl less libnss3 telnet tini tree unzip && \
+	apt-get install --no-install-recommends -y bash curl less libnss3 telnet tini tree unzip && \
 	apt-get upgrade -y && \
 	apt-get clean
 
