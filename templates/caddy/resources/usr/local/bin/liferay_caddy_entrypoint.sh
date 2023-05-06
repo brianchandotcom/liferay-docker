@@ -1,3 +1,5 @@
+#!/bin/sh
+
 function main {
 	for i in $(cat /etc/liferay/lxc/dxp-metadata/com.liferay.lxc.dxp.domains 2>/dev/null)
 	do
