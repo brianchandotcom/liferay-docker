@@ -9,5 +9,6 @@ fetch_orca_secrets.sh db mysql_backup_password mysql_liferay_password mysql_root
 
 mysql_init.sh
 
-block_begin "Start mysqld process"
+block_begin "Start MySQL."
+
 mysqld

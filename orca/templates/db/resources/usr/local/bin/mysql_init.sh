@@ -2,8 +2,6 @@
 
 set -e
 
-# Inspired by Percona's MySQL docker image, might share code snippets
-
 # shellcheck disable=SC1091
 . _liferay_common.sh
 
@@ -12,16 +10,16 @@ function check_setup {
 
 	if [ -d /var/lib/mysql/data/mysql ]
 	then
-		block_finish "Check if MySQL is set up: DONE"
+		block_finish "Check if MySQL is set up: DONE."
 
 		exit 0
 	else
-		block_finish "Check if MySQL is set up: NOT DONE"
+		block_finish "Check if MySQL is set up: NOT DONE."
 	fi
 }
 
-function init_datadir {
-	block_begin "Datadir initialization."
+function init_data {
+	block_begin "Initialize data."
 
 	install -v -o mysql -g mysql -m 0700 -d "${HOME}/data" "${HOME}/log"
 
@@ -82,7 +80,7 @@ function main {
 
 	get_vault_mysql_root_password
 
-	init_datadir
+	init_data
 
 	start_temporary
 

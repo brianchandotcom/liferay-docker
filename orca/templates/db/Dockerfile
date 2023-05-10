@@ -1,6 +1,8 @@
 # ubuntu:jammy-20230308
 FROM ubuntu:jammy@sha256:7a57c69fe1e9d5b97c5fe649849e79f2cfc3bf11d10bbd5218b4eb61716aebe6
 
+CMD ["mysqld"]
+
 COPY resources/etc/mysql/mysql.conf.d/ /etc/mysql/mysql.conf.d/
 COPY resources/usr/local/bin/ /usr/local/bin/
 
@@ -26,9 +28,8 @@ RUN set -ex; \
 
 RUN install -d /var/lib/mysql /var/run/mysqld -g root -m 0700 -o mysql && \
 	echo "${TZ}" > /etc/localtime && dpkg-reconfigure tzdata && \
-	find /etc/mysql/conf.d/ /etc/mysql/mysql.cnf /etc/mysql/mysql.conf.d/ -name '*.cnf' -print0 \
-		| xargs -0 grep -lZE '^(bind-address|log|user)' \
-		| xargs -rt -0 sed -Ei 's/^(bind-address|log|user)/#&/'
+	find /etc/mysql/conf.d/ /etc/mysql/mysql.cnf /etc/mysql/mysql.conf.d/ -name "*.cnf" -print0 \
+		| xargs -0 grep -lZE "^(bind-address|log|user)" \
+		| xargs -rt -0 sed -Ei "s/^(bind-address|log|user)/#&/"
 
 USER mysql
-CMD ["mysqld"]

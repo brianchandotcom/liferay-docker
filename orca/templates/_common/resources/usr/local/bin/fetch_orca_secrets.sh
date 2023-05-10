@@ -15,11 +15,11 @@ function check_usage {
 }
 
 function get_token {
-	round=0
+	local round=0
 
 	for round in $(seq 30)
 	do
-		echo "Trying to fetch vault login token (${round}/30)"
+		echo "Fetching vault login token (${round}/30)."
 
 		local token=$(curl --fail --request POST --silent "http://${ORCA_VAULT_ADDRESSES}/v1/auth/userpass-${1}/login/${1}" --data "{\"password\": \"${ORCA_VAULT_SERVICE_PASSWORD}\"}")
 
@@ -33,7 +33,7 @@ function get_token {
 
 	if [ ! -n "${token}" ]
 	then
-		echo "Fetching vault login token was unsuccessful"
+		echo "Unable to fetch vault login token."
 
 		exit 1
 	fi
@@ -56,21 +56,22 @@ function load_secrets {
 
 		for round in $(seq 30)
 		do
-			echo "Trying to fetch secret '${secret}' (${round}/40)"
+			echo "Fetching secret \"${secret}\" (${round}/40)."
 
 			local password=$(curl --fail --header "X-Vault-Token: ${token}" --request GET --silent "http://${ORCA_VAULT_ADDRESSES}/v1/secret/data/${secret}")
 
-			ret="${?}"
+			local exit_code="${?}"
 
-			if [ "${ret}" -gt 0 ]
+			if [ "${exit_code}" -gt 0 ]
 			then
-				echo "Fetching secret '${secret}' failed with error ${ret}."
+				echo "Unable to fetch secret \"${secret}\": ${exit_code}."
+
 				sleep 3
 			fi
 
 			if [ -n "${password}" ]
 			then
-				echo "Fetching secret '${secret}' succeeded."
+				echo "Fetched secret \"${secret}\"."
 
 				break
 			fi
@@ -80,7 +81,7 @@ function load_secrets {
 
 		if [ ! -n "${password}" ]
 		then
-			echo "Fetching secret '${secret}' was unsuccessful"
+			echo "Unable to fetch secret \"${secret}\"."
 
 			exit 1
 		fi
