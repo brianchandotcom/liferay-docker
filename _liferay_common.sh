@@ -144,7 +144,7 @@ function lc_docker_compose {
 # FUNCTION
 #	Downloads a file to a cache directory configured via ${LIFERAY_COMMON_DOWNLOAD_CACHE_DIR}.
 #	If the file is already in the cache then skip downloading it again.
-#	If a file name is given as an optional second parameter, then it is copied from the cache.
+#	If a file name is given as an optional second parameter, then it is copied from the cache. Otherwise the script will echo the path to the file in the cache.
 #	If the file cannot be downloaded in ${LIFERAY_COMMON_DOWNLOAD_MAX_TIME} seconds, the process is cancelled.
 #
 # INVOCATION:
@@ -196,25 +196,18 @@ function lc_download {
 
 			if [ "${skip_copy}" = "true" ]
 			then
-				lc_log DEBUG "Skipping copy."
-
 				echo "${cache_file}"
 			else
 				lc_log DEBUG "Copying from cache: ${cache_file}."
 
 				cp "${cache_file}" "${file_name}"
-
-				echo "${file_name}"
 			fi
 
 			return
 		fi
 	fi
 
-	local cache_file_dir
-	cache_file_dir="$(dirname "${cache_file}")"
-
-	mkdir -p "${cache_file_dir}"
+	mkdir -p $(dirname "${cache_file}")
 
 	lc_log DEBUG "Downloading ${file_url}."
 
@@ -238,8 +231,6 @@ function lc_download {
 		lc_log DEBUG "Copying from cache: ${cache_file}."
 
 		cp "${cache_file}" "${file_name}"
-
-		echo "${file_name}"
 	fi
 }
 
@@ -373,12 +364,12 @@ function _lc_init {
 		LIFERAY_COMMON_DOWNLOAD_CACHE_DIR=${HOME}/.liferay-common-cache
 	fi
 
+	LIFERAY_COMMON_DOWNLOAD_MAX_TIME=1200
 	LIFERAY_COMMON_EXIT_CODE_BAD=1
 	LIFERAY_COMMON_EXIT_CODE_CD=3
 	LIFERAY_COMMON_EXIT_CODE_HELP=2
 	LIFERAY_COMMON_EXIT_CODE_OK=0
 	LIFERAY_COMMON_EXIT_CODE_SKIPPED=4
-	LIFERAY_COMMON_DOWNLOAD_MAX_TIME=1200
 
 	if (locale -a | grep -q en_US.utf8)
 	then
