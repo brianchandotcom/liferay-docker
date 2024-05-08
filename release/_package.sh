@@ -49,6 +49,7 @@ function generate_release_properties_file {
 		echo "liferay.product.version=${product_version}"
 		echo "release.date=$(date +"%Y-%m-%d")"
 		echo "target.platform.version=${_PRODUCT_VERSION}"
+		echo "target.platform.version=$(echo ${_PRODUCT_VERSION} | sed -r 's/-u/.u/')"
 	) > release.properties
 }
 
