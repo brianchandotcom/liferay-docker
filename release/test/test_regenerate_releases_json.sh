@@ -27,6 +27,7 @@ function setup {
 
 function tear_down {
     unset _RELEASE_ROOT_DIR
+
     rm ./*.json
 }
 
