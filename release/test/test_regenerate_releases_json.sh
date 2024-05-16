@@ -20,9 +20,9 @@ function assertEquals {
 function setup {
     export _RELEASE_ROOT_DIR="$(dirname "${PWD}")"
 
-    _process_product dxp
-    _promote_product_versions dxp
-    _merge_json_snippets
+    _process_product dxp &> /dev/null
+    _promote_product_versions dxp &> /dev/null
+    _merge_json_snippets &> /dev/null
 }
 
 function tear_down {
