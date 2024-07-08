@@ -24,7 +24,7 @@ function check_usage {
 function main {
 	check_usage
 
-	lc_cd liferay-portal
+	lc_cd /home/me/liferay-portal
 
 	local git_pull_response=$(git pull origin master)
 
@@ -77,12 +77,17 @@ function main {
 		slack_message="These blockers are not merged: ${unmerged_issue_keys}."
 	fi
 
+	local ref_data=$(
+		cat <<- END
+		{
+			"text": "${slack_message}"
+		}
+		END
+	)
+
 	if (curl \
 			"${LIFERAY_TRACK_RELEASE_BLOCKERS_SLACK_URL}" \
-			--data-raw '
-				{
-					"text": ${slack_message}
-				}' \
+			--data "${ref_data}" \
 			--fail \
 			--header "Content-type: application/json" \
 			--max-time 10 \
