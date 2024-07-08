@@ -24,15 +24,13 @@ function check_usage {
 function main {
 	check_usage
 
-	lc_cd liferay-portal
+	lc_cd /home/me/liferay-portal
 
 	local git_pull_response=$(git pull origin master)
 
 	if [[ "${git_pull_response}" == *"Already up to date"* ]]
 	then
 		lc_log INFO "The master branch is already up to date."
-
-		exit "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
 
 	local jira_api_response=$(\
@@ -79,10 +77,9 @@ function main {
 
 	if (curl \
 			"${LIFERAY_TRACK_RELEASE_BLOCKERS_SLACK_URL}" \
-			--data-raw '
-				{
-					"text": ${slack_message}
-				}' \
+			--data-raw '{
+    			"text": "'"${slack_message}"'"
+			}' \
 			--fail \
 			--header "Content-type: application/json" \
 			--max-time 10 \
