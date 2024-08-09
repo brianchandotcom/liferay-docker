@@ -48,15 +48,29 @@ function build_service_liferay {
 
 	cp ../../orca/templates/liferay/resources/usr/local/liferay/scripts/pre-startup/10_wait_for_dependencies.sh build/liferay/resources/usr/local/liferay/scripts/pre-startup
 
-	(
-		echo "FROM $(grep -e '^liferay.workspace.docker.image.liferay=' "${SPINNER_LIFERAY_LXC_REPOSITORY_DIR}/liferay/gradle.properties" | cut -d'=' -f2)"
+	if [ -n "${ENVIRONMENT_DESCRIPTOR}" ]
+	then
+		echo "FROM $(grep -e "\"liferay-image\":" "${ENVIRONMENT_DESCRIPTOR}" | cut -d '"' -f 4)" > build/liferay/Dockerfile
 
+		local hotfix=$(grep -e "\"hotfix\":" "${ENVIRONMENT_DESCRIPTOR}" | cut -d '"' -f 4)
+
+		if [ -n "${hotfix}" ]
+		then
+			hotfix="RUN \/opt\/liferay\/patching-tool\/patching-tool.sh install ${hotfix}"
+		fi
+
+		sed -i "s/\[TO-BE-REPLACED-BY-SINGLE-CI\]/${hotfix}/g" "${SPINNER_LIFERAY_LXC_REPOSITORY_DIR}/liferay/Dockerfile.ext"
+	else
+		echo "FROM $(grep -e '^liferay.workspace.docker.image.liferay=' "${SPINNER_LIFERAY_LXC_REPOSITORY_DIR}/liferay/gradle.properties" | cut -d '=' -f 2)" > build/liferay/Dockerfile
+	fi
+
+	(
 		echo "COPY resources/opt/liferay /opt/liferay"
 		echo "COPY resources/usr/local/bin /usr/local/bin"
 		echo "COPY resources/usr/local/liferay/scripts /usr/local/liferay/scripts"
 
 		cat "${SPINNER_LIFERAY_LXC_REPOSITORY_DIR}/liferay/Dockerfile.ext"
-	) > build/liferay/Dockerfile
+	) >> build/liferay/Dockerfile
 
 	mkdir -p liferay_mount/files/deploy
 
@@ -381,6 +395,18 @@ function check_usage {
 		echo "The ${SPINNER_LIFERAY_LXC_REPOSITORY_DIR}/liferay/configs/${LXC_ENVIRONMENT} directory does not exist."
 
 		exit "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+	fi
+
+	if [ "$(git --git-dir "${SPINNER_LIFERAY_LXC_REPOSITORY_DIR}/.git" rev-parse --abbrev-ref HEAD)" == "master" ]
+	then
+		ENVIRONMENT_DESCRIPTOR="${SPINNER_LIFERAY_LXC_REPOSITORY_DIR}/automation/environment-descriptors/${LXC_ENVIRONMENT}.json"
+
+		if [ ! -e "${ENVIRONMENT_DESCRIPTOR}" ]
+		then
+			echo "The ${ENVIRONMENT_DESCRIPTOR} file does not exist."
+
+			exit "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+		fi
 	fi
 
 	if [[ $(find dxp-activation-key -name "*.xml" | wc -l ) -eq 0 ]]
