@@ -3,10 +3,19 @@
 source ../_liferay_common.sh
 source _git.sh
 source _github.sh
+source _jira.sh
 source _product.sh
 source _product_info_json.sh
 source _promotion.sh
 source _releases_json.sh
+
+function add_property {
+	local new_key="${1}"
+	local new_value="${2}"
+	local search_key="${3}"
+
+	sed -i "/${search_key}/a\	\\${new_key}=${new_value}" "build.properties"
+}
 
 function check_supported_versions {
 	local supported_version="$(echo "${_PRODUCT_VERSION}" | cut -d '.' -f 1,2)"
@@ -59,15 +68,17 @@ function check_usage {
 function commit_to_branch_and_send_pull_request {
 	git add "${1}"
 
-	git commit -m "${2}"
+	git commit --message "${2}"
 
-	git push -f origin "${3}"
+	local repository_name=$(echo "${5}" | cut -d '/' -f 2)
+
+	git push --force "git@github.com:liferay-release/${repository_name}.git" "${3}"
 
 	gh pr create \
-		--base "${3}" \
+		--base "${4}" \
 		--body "Created by liferay-docker/release/release_gold.sh." \
-		--repo brianchandotcom/liferay-portal-ee \
-		--title "${4}"
+		--repo "${5}" \
+		--title "${6}"
 
 	if [ "${?}" -ne 0 ]
 	then
@@ -122,6 +133,8 @@ function main {
 
 	#lc_time_run update_release_info_date
 
+	lc_time_run reference_new_releases
+
 	#lc_time_run upload_to_docker_hub
 }
 
@@ -134,11 +147,34 @@ function prepare_branch_to_commit {
 
 	git branch --delete --force "${1}" &> /dev/null
 
-	git fetch --no-tags upstream "${1}":"${1}" &> /dev/null
+	git fetch --no-tags git@github.com:liferay/liferay-portal-ee.git "${1}":"${1}" &> /dev/null
 
 	git checkout "${1}" &> /dev/null
 
 	if [ "$(git rev-parse --abbrev-ref HEAD 2> /dev/null)" != "${1}" ]
+	then
+		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+	fi
+}
+
+function prepare_branch_to_commit_from_master {
+	lc_cd "${1}"
+
+	git checkout master
+
+	git fetch git@github.com:liferay/liferay-jenkins-ee.git master
+
+	git reset --hard FETCH_HEAD
+
+	git push --delete git@github.com:liferay-release/liferay-jenkins-ee.git "${2}"
+
+	git branch --delete --force "${2}"
+
+	git checkout -b "${2}"
+
+	git push git@github.com:liferay-release/liferay-jenkins-ee.git "${2}" --force
+
+	if [ "$(git rev-parse --abbrev-ref HEAD)" != "${2}" ]
 	then
 		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 	fi
@@ -153,9 +189,12 @@ function prepare_next_release_branch {
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
 
-	rm -fr releases.json
+	if [[ ! " ${@} " =~ " --test " ]]
+	then
+		rm -fr releases.json
 
-	LIFERAY_COMMON_DOWNLOAD_SKIP_CACHE="true" lc_download "https://releases.liferay.com/releases.json" releases.json
+		LIFERAY_COMMON_DOWNLOAD_SKIP_CACHE="true" lc_download "https://releases.liferay.com/releases.json" releases.json
+	fi
 
 	local product_group_version="$(echo "${_PRODUCT_VERSION}" | cut -d '.' -f 1,2)"
 
@@ -164,7 +203,10 @@ function prepare_next_release_branch {
 			select(.productGroupVersion == \"${product_group_version}\" and .promoted == \"true\") | \
 			.targetPlatformVersion" releases.json)"
 
-	rm -fr releases.json
+	if [[ ! " ${@} " =~ " --test " ]]
+	then
+		rm -fr releases.json
+	fi
 
 	if [ "${_PRODUCT_VERSION}" != "${latest_quarterly_product_version}" ]
 	then
@@ -173,9 +215,9 @@ function prepare_next_release_branch {
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
 
-	local quarterly_release_branch_name="release-${product_group_version}"
+	local quarterly_release_branch="release-${product_group_version}"
 
-	prepare_branch_to_commit "${quarterly_release_branch_name}"
+	prepare_branch_to_commit "${quarterly_release_branch}"
 
 	if [ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]
 	then
@@ -199,8 +241,10 @@ function prepare_next_release_branch {
 		then
 			commit_to_branch_and_send_pull_request \
 				"${_PROJECTS_DIR}/liferay-portal-ee/release.properties" \
-				"Prepare ${quarterly_release_branch_name}" \
-				"${quarterly_release_branch_name}" \
+				"Prepare ${product_group_version}.${next_project_version_suffix}" \
+				"${quarterly_release_branch}" \
+				"${quarterly_release_branch}" \
+				"brianchandotcom/liferay-portal-ee" \
 				"Prep next"
 
 			if [ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]
@@ -235,6 +279,163 @@ function print_help {
 	echo "Example: LIFERAY_RELEASE_PREPARE_NEXT_RELEASE_BRANCH=true LIFERAY_RELEASE_RC_BUILD_TIMESTAMP=1695892964 LIFERAY_RELEASE_VERSION=2023.q3.0 ${0}"
 
 	exit "${LIFERAY_COMMON_EXIT_CODE_HELP}"
+}
+
+function reference_new_releases {
+	if [[ "${_PRODUCT_VERSION}" != *q* ]]
+	then
+		lc_log INFO "Skipping the update to the references in the liferay-jenkins-ee repository."
+
+		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
+	fi
+
+	if [[ ! " ${@} " =~ " --test " ]]
+	then
+		prepare_branch_to_commit_from_master "${_PROJECTS_DIR}/liferay-jenkins-ee/commands" "new_releases_branch"
+	fi
+
+	if [ "${?}" -ne 0 ]
+	then
+		lc_log ERROR "Unable to prepare the next release references branch."
+
+		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+	fi
+
+	local base_url="http://mirrors.lax.liferay.com/releases.liferay.com"
+
+	local previous_product_version="$(grep "portal.latest.bundle.version\[master\]=" "build.properties" | cut -d "=" -f 2)"
+
+	for component in osgi sql tools
+	do
+		add_property \
+			"portal.${component}.zip.url\[${_PRODUCT_VERSION}\]" \
+			"${base_url}/${LIFERAY_RELEASE_PRODUCT_NAME}/${_PRODUCT_VERSION}/liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-${component}-${_PRODUCT_VERSION}-${LIFERAY_RELEASE_RC_BUILD_TIMESTAMP}.zip" \
+			"portal.${component}.zip.url\[${previous_product_version}\]="
+	done
+
+	add_property \
+		"plugins.war.zip.url\[${_PRODUCT_VERSION}\]" \
+		"http://release-1/1/userContent/liferay-release-tool/7413/plugins.war.latest.zip" \
+		"plugins.war.zip.url\[${previous_product_version}\]="
+
+	add_property \
+		"	portal.bundle.tomcat\[${_PRODUCT_VERSION}\]" \
+		"${base_url}/${LIFERAY_RELEASE_PRODUCT_NAME}/${_PRODUCT_VERSION}/liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-tomcat-${_PRODUCT_VERSION}-${LIFERAY_RELEASE_RC_BUILD_TIMESTAMP}.7z" \
+		"portal.bundle.tomcat\[${previous_product_version}\]="
+
+	add_property \
+		"portal.license.url\[${_PRODUCT_VERSION}\]" \
+		"http://www.liferay.com/licenses/license-portaldevelopment-developer-cluster-7.0de-liferaycom.xml" \
+		"portal.license.url\[${previous_product_version}\]="
+
+	add_property \
+		"portal.version.latest\[${_PRODUCT_VERSION}\]" \
+		"${_PRODUCT_VERSION}" \
+		"portal.version.latest\[${previous_product_version}\]="
+
+	add_property \
+		"portal.war.url\[${_PRODUCT_VERSION}\]" \
+		"${base_url}/${LIFERAY_RELEASE_PRODUCT_NAME}/${_PRODUCT_VERSION}/liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-${_PRODUCT_VERSION}-${LIFERAY_RELEASE_RC_BUILD_TIMESTAMP}.war" \
+		"portal.war.url\[${previous_product_version}\]="
+
+	add_property \
+		"portal.latest.bundle.version\[${_PRODUCT_VERSION}\]" \
+		"${_PRODUCT_VERSION}" \
+		"portal.latest.bundle.version\[${previous_product_version}\]="
+
+	replace_property \
+		"portal.latest.bundle.version\[master\]" \
+		"${_PRODUCT_VERSION}" \
+		"portal.latest.bundle.version\[master\]=${previous_product_version}"
+
+	local previous_quarterly_release_branch="$(\
+		grep "portal.latest.bundle.version" \
+			"build.properties" | \
+			tail -1 | \
+			cut -d '[' -f 2 | \
+			cut -d ']' -f 1)"
+
+	local quarterly_release_branch="release-$(echo "${_PRODUCT_VERSION}" | cut -d '.' -f 1,2)"
+
+	if [ "${quarterly_release_branch}" == "${previous_quarterly_release_branch}" ]
+	then
+		replace_property \
+			"portal.latest.bundle.version\[${quarterly_release_branch}\]" \
+			"${_PRODUCT_VERSION}" \
+			"portal.latest.bundle.version\[${quarterly_release_branch}\]=${previous_product_version}"
+
+		replace_property \
+			"portal.version.latest\[${quarterly_release_branch}\]" \
+			"${_PRODUCT_VERSION}" \
+			"portal.version.latest\[${quarterly_release_branch}\]=${previous_product_version}"
+	else
+		add_property \
+			"portal.latest.bundle.version\[${quarterly_release_branch}\]" \
+			"${_PRODUCT_VERSION}" \
+			"portal.latest.bundle.version\[${previous_quarterly_release_branch}\]="
+
+		add_property \
+			"portal.version.latest\[${quarterly_release_branch}\]" \
+			"${_PRODUCT_VERSION}" \
+			"portal.version.latest\[${previous_quarterly_release_branch}\]="
+	fi
+
+	if [[ ! " ${@} " =~ " --test " ]]
+	then
+		local issue_assignee="60a3f462391e56006e6b661b"
+		local issue_custom_field_team="customfield_10001"
+		local issue_custom_field_team_value="04c03e90-c5a7-4fda-82f6-65746fe08b83"
+
+		local issue_key="$(\
+			add_jira_issue \
+				"${issue_assignee}" \
+				"Release Tester" \
+				"Task" \
+				"LRCI" \
+				"Add release references for ${_PRODUCT_VERSION}" \
+				"${issue_custom_field_team}" \
+				"${issue_custom_field_team_value}")"
+
+		if [ "${issue_key}" == "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]
+		then
+			lc_log ERROR "Unable to create the jira issue."
+
+			return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+		fi
+
+		commit_to_branch_and_send_pull_request \
+			"${_PROJECTS_DIR}/liferay-jenkins-ee/commands/build.properties" \
+			"${issue_key} Add release references for ${_PRODUCT_VERSION}" \
+			"new_releases_branch" \
+			"master" \
+			"pyoo47/liferay-jenkins-ee" \
+			"${issue_key} Add release references for ${_PRODUCT_VERSION}"
+
+		if [ "${?}" -ne 0 ]
+		then
+			lc_log ERROR "Unable to send the next release references."
+
+			return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+		else
+			lc_log INFO "The pull request with next release references was sent successfully."
+		fi
+
+		local pull_request_url="$(\
+			gh pr view liferay-release:new_releases_branch \
+				--jq ".url" \
+				--json url \
+				--repo pyoo47/liferay-jenkins-ee)"
+
+		add_jira_issue_comment "Related pull request: ${pull_request_url}" "${issue_key}"
+	fi
+}
+
+function replace_property {
+	local new_key="${1}"
+	local new_value="${2}"
+	local search_key="${3}"
+
+	sed -i "s/${search_key}/${new_key}=${new_value}/" "build.properties"
 }
 
 function tag_release {
@@ -380,9 +581,9 @@ function update_release_info_date {
 
 	local product_group_version="$(echo "${_PRODUCT_VERSION}" | cut -d '.' -f 1,2)"
 
-	local quarterly_release_branch_name="release-${product_group_version}"
+	local quarterly_release_branch="release-${product_group_version}"
 
-	prepare_branch_to_commit "${quarterly_release_branch_name}"
+	prepare_branch_to_commit "${quarterly_release_branch}"
 
 	if [ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]
 	then
@@ -400,7 +601,9 @@ function update_release_info_date {
 		commit_to_branch_and_send_pull_request \
 			"${_PROJECTS_DIR}/liferay-portal-ee/release.properties" \
 			"Update the release info date for ${_PRODUCT_VERSION}" \
-			"${quarterly_release_branch_name}" \
+			"${quarterly_release_branch}" \
+			"${quarterly_release_branch}" \
+			"brianchandotcom/liferay-portal-ee" \
 			"Prep next"
 
 		if [ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]
