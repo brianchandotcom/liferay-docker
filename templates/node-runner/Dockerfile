@@ -1,10 +1,10 @@
-FROM --platform=linux/arm64 liferay/base:latest as liferay-base-arm64
+FROM --platform=linux/arm64 liferay/base:latest AS liferay-base-arm64
 
 ARG LABEL_NODE_RUNNER_AMD64_VERSION
 ARG LABEL_NODE_RUNNER_ARM64_VERSION
 ARG LABEL_NODE_RUNNER_VERSION=${LABEL_NODE_RUNNER_ARM64_VERSION}
 
-FROM --platform=linux/amd64 liferay/base:latest as liferay-base-amd64
+FROM --platform=linux/amd64 liferay/base:latest AS liferay-base-amd64
 
 ARG LABEL_NODE_RUNNER_AMD64_VERSION
 ARG LABEL_NODE_RUNNER_ARM64_VERSION
@@ -44,7 +44,7 @@ RUN apt-get update && \
 	curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
 	echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_16.x nodistro main" > /etc/apt/sources.list.d/nodesource.list && \
 	apt-get update && \
-	DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install --no-install-recommends --yes nodejs && \
+	DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install --no-install-recommends --yes nodejs npm && \
 	apt-get clean
 
 USER liferay:liferay
