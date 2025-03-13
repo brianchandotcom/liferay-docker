@@ -94,6 +94,31 @@ function main {
 	then
 		sed -i s/"<Engine name=\"Catalina\" defaultHost=\"localhost\">"/"<Engine defaultHost=\"localhost\" jvmRoute=\"${LIFERAY_TOMCAT_JVM_ROUTE}\" name=\"Catalina\">"/ /opt/liferay/tomcat/conf/server.xml
 	fi
+
+	if [ "${LIFERAY_TOMCAT_SESSION_REPLICATION_ENABLED}" == "true" ]
+	then
+		local cluster
+		IFS='' read -r -d '' cluster <<EOF
+		<Cluster className="org.apache.catalina.ha.tcp.SimpleTcpCluster">
+			<Manager className="com.liferay.support.tomcat.session.LiferayDeltaManager" />
+			<Channel className="org.apache.catalina.tribes.group.GroupChannel">
+				<Sender className="org.apache.catalina.tribes.transport.ReplicationTransmitter">
+					<Transport className="org.apache.catalina.tribes.transport.nio.PooledParallelSender" timeout="300000" />
+				</Sender>
+			</Channel>
+		</Cluster>
+EOF
+
+		sed -i '/<Engine name="Catalina" defaultHost="localhost">/r'<(echo "$cluster") /opt/liferay/tomcat/conf/server.xml
+
+		local distributable
+		IFS='' read -r -d '' distributable <<EOF
+	<distributable />
+EOF
+
+		sed -i '/<web-app id="Liferay_Portal"/r'<(echo "$distributable") /opt/liferay/tomcat/webapps/ROOT/WEB-INF/web.xml
+xml
+	fi
 }
 
 main
