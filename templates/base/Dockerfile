@@ -3,12 +3,13 @@ FROM --platform=${TARGETPLATFORM} ubuntu:oracular AS ubuntu-oracular
 COPY resources/ /
 
 RUN apt-get update && \
-	DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install --no-install-recommends --yes bash ca-certificates curl jq less libnss3 telnet tini tree unzip && \
+	DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install --no-install-recommends --yes bash ca-certificates curl jq less libnss3 telnet tini tree unzip sudo && \
 	apt-get upgrade --yes && \
 	apt-get clean
 
 RUN userdel ubuntu && \
-	useradd --create-home --home-dir /home/liferay --shell /usr/sbin/nologin --uid 1000 --user-group liferay
+	useradd --create-home --home-dir /home/liferay --shell /usr/sbin/nologin --uid 1000 --user-group liferay && \
+	usermod -aG sudo liferay
 
 FROM ubuntu-oracular
 
