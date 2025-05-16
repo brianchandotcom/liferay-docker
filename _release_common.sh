@@ -56,6 +56,15 @@ function is_early_product_version_than {
 	echo "false"
 }
 
+function is_quarterly_release {
+	if [[ "${1}" == *q* ]]
+	then
+		return "${LIFERAY_COMMON_EXIT_CODE_OK}"
+	else
+		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
+	fi
+}
+
 function set_actual_product_version {
 	ACTUAL_PRODUCT_VERSION="${1}"
 }
