@@ -11,10 +11,10 @@ function main {
 }
 
 function test_release_common_is_early_product_version_than {
-	_test_release_common_is_early_product_version_than "2023.q3.1" "2025.q2.0" "true"
-	_test_release_common_is_early_product_version_than "2024.q4.7" "2025.q1.0" "true"
-	_test_release_common_is_early_product_version_than "2025.q1.0" "2025.q1.1" "true"
-	_test_release_common_is_early_product_version_than "2025.q1.1-lts" "2025.q1.0-lts" "false"
+	_test_release_common_is_early_product_version_than "2023.q3.1" "2025.q2.0" "${LIFERAY_COMMON_EXIT_CODE_OK}"
+	_test_release_common_is_early_product_version_than "2024.q4.7" "2025.q1.0" "${LIFERAY_COMMON_EXIT_CODE_OK}"
+	_test_release_common_is_early_product_version_than "2025.q1.0" "2025.q1.1" "${LIFERAY_COMMON_EXIT_CODE_OK}"
+	_test_release_common_is_early_product_version_than "2025.q1.1-lts" "2025.q1.0-lts" "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 }
 
 function test_release_common_is_quarterly_release {
