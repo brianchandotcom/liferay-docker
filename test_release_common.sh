@@ -24,7 +24,7 @@ function test_release_common_is_quarterly_release {
 }
 
 function _test_release_common_is_early_product_version_than {
-	set_actual_product_version "${1}" 
+	set_actual_product_version "${1}"
 
 	echo -e "Running _test_release_common_is_early_product_version_than for ${1}.\n"
 
