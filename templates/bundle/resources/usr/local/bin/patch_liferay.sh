@@ -2,7 +2,7 @@
 
 function apply_patch {
 	local patch_file_name=${1}
-	local patch_version=$(echo "${patch_file_name}" | awk -F"-" '{ print $NF }' | awk -F"." '{ print $1 }')
+	local patch_version=$(echo "${patch_file_name}" | awk -F '-' '{ print $NF }' | awk -F '.' '{ print $1 }')
 
 	if [ -e "/opt/liferay/patching-tool/patch-applied" ]
 	then
@@ -43,7 +43,7 @@ function install_patch_step_2 {
 }
 
 function main {
-	if [[ $(ls -A "${LIFERAY_PATCHING_DIR}"/patching-tool-*.zip 2>/dev/null) ]]
+	if [[ $(ls --almost-all "${LIFERAY_PATCHING_DIR}"/patching-tool-*.zip 2>/dev/null) ]]
 	then
 		echo ""
 		echo "[LIFERAY] Updating Patching Tool."
@@ -74,13 +74,13 @@ function main {
 		fi
 	elif [ -d "${LIFERAY_PATCHING_DIR}" ] && [[ $(find "${LIFERAY_PATCHING_DIR}" -maxdepth 1 -type f -name "liferay-*.zip" 2>/dev/null) ]]
 	then
-		if [ $(find "${LIFERAY_PATCHING_DIR}" -maxdepth 1 -type f -name "liferay-*.zip" | wc -l) == 1 ]
+		if [ $(find "${LIFERAY_PATCHING_DIR}" -maxdepth 1 -type f -name "liferay-*.zip" | wc --lines) == 1 ]
 		then
 			local patch_file_name=$(basename "${LIFERAY_PATCHING_DIR}"/liferay-*.zip)
 
 			apply_patch "${patch_file_name}"
 		else
-			local patch_file_name=$(basename $(find "${LIFERAY_PATCHING_DIR}" -maxdepth 1 -name "liferay-*.zip" -type f 2>/dev/null | sort | tail -n 1))
+			local patch_file_name=$(basename $(find "${LIFERAY_PATCHING_DIR}" -maxdepth 1 -name "liferay-*.zip" -type f 2>/dev/null | sort | tail --lines 1))
 
 			echo ""
 			echo "[LIFERAY] There were multiple hotfixes in the patching folder. As only one can be installed, applying the latest one: ${patch_file_name}."

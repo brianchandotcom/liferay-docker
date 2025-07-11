@@ -119,13 +119,13 @@ function download {
 	echo "Downloading ${file_url}."
 	echo ""
 
-	mkdir -p $(dirname "${file_name}")
+	mkdir --parents $(dirname "${file_name}")
 
 	curl $(echo "${LIFERAY_DOCKER_CURL_OPTIONS}") --fail --location --output "${file_name}" "${file_url}" || exit 2
 }
 
 function get_current_arch {
-	if [ $(uname -m) == "aarch64" ]
+	if [ $(uname --machine) == "aarch64" ]
 	then
 		echo "arm64"
 	else
@@ -194,7 +194,7 @@ function make_temp_directory {
 
 	TEMP_DIR="temp-${TIMESTAMP}"
 
-	mkdir -p "${TEMP_DIR}"
+	mkdir --parents "${TEMP_DIR}"
 
 	local resource_dir
 
@@ -217,7 +217,7 @@ function make_temp_directory {
 }
 
 function pid_8080 {
-	local pid=$(lsof -Fp -i 4tcp:8080 -sTCP:LISTEN | head -n 1)
+	local pid=$(lsof -Fp -i 4tcp:8080 -sTCP:LISTEN | head --lines 1)
 
 	echo "${pid##p}"
 }
@@ -229,7 +229,7 @@ function prepare_tomcat {
 	then
 		mv "${TEMP_DIR}/liferay/tomcat-${liferay_tomcat_version}" "${TEMP_DIR}/liferay/tomcat"
 
-		ln -s tomcat "${TEMP_DIR}/liferay/tomcat-${liferay_tomcat_version}"
+		ln --symbolic tomcat "${TEMP_DIR}/liferay/tomcat-${liferay_tomcat_version}"
 	fi
 
 	configure_tomcat
@@ -303,7 +303,7 @@ function start_tomcat {
 function stat {
 	if [ "$(uname)" == "Darwin" ]
 	then
-		/usr/bin/stat -f "%z" "${1}"
+		/usr/bin/stat --file-system "%z" "${1}"
 	else
 		/usr/bin/stat --printf="%s" "${1}"
 	fi

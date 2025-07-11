@@ -4,11 +4,11 @@ source ../_release_common.sh
 source ./_product.sh
 
 function generate_api_jars {
-	mkdir -p "${_BUILD_DIR}/boms"
+	mkdir --parents "${_BUILD_DIR}/boms"
 
 	lc_cd "${_BUILD_DIR}/boms"
 
-	mkdir -p api-jar api-sources-jar
+	mkdir --parents api-jar api-sources-jar
 
 	local enforce_version_artifacts=$(lc_get_property "${_PROJECTS_DIR}/liferay-portal-ee/source-formatter.properties" source.check.GradleDependencyArtifactsCheck.enforceVersionArtifacts | sed --expression "s/,/\\n/g")
 
@@ -123,7 +123,7 @@ function generate_api_jars {
 
 	_copy_tld "api-jar/META-INF" "liferay-*.tld" "ratings.tld"
 
-	mkdir -p api-jar/META-INF/resources
+	mkdir --parents api-jar/META-INF/resources
 
 	_copy_tld "api-jar/META-INF/resources" "liferay-application-list.tld" "liferay-data-engine.tld" "liferay-ddm.tld" "liferay-export-import-changeset.tld" "liferay-form.tld" "liferay-staging.tld" "liferay-template.tld"  "react.tld" "soy.tld"
 
@@ -248,7 +248,7 @@ function generate_pom_release_bom {
 	echo "" >> "${pom_file_name}"
 
 	find "${_PROJECTS_DIR}/liferay-portal-ee/modules/.releng" -name '*.properties' -print0 | \
-		xargs -0 awk -F= '/^artifact.url=/  { print $2 }' \
+		xargs -0 awk --field-separator '=' '/^artifact.url=/  { print $2 }' \
 		> /tmp/artifact_urls.txt
 
 	for artifact_file in $(
@@ -406,7 +406,7 @@ function generate_pom_release_distro {
 }
 
 function generate_poms {
-	mkdir -p "${_BUILD_DIR}/boms"
+	mkdir --parents "${_BUILD_DIR}/boms"
 
 	lc_cd "${_BUILD_DIR}/boms"
 
@@ -422,7 +422,7 @@ function generate_poms {
 function _copy_file {
 	local dir=$(dirname "${1}" | sed --expression "s#[./]*[^/]*/##")
 
-	mkdir -p "${2}/${dir}"
+	mkdir --parents "${2}/${dir}"
 
 	lc_log DEBUG "Copying ${1}."
 
@@ -439,7 +439,7 @@ function _copy_source_package {
 
 	new_dir_name="${_BUILD_DIR}"/boms/api-sources-jar/$(dirname "${new_dir_name}")
 
-	mkdir -p "${new_dir_name}"
+	mkdir --parents "${new_dir_name}"
 
 	cp --archive "${1}" "${new_dir_name}"
 }
@@ -461,8 +461,8 @@ function _copy_tld {
 
 	for file in $(eval find "${_PROJECTS_DIR}" \
 		"${arguments}" -type f | \
-			awk -F "/" '{print $NF, $0}' | \
-			sort -k 1,1 -u | \
+			awk --field-separator '/' '{print $NF, $0}' | \
+			sort --key 1,1 --unique | \
 			awk '{print $2}')
 	do
 		cp "${file}" "${1}"
@@ -472,7 +472,7 @@ function _copy_tld {
 function _manage_bom_jar {
 	lc_log DEBUG "Processing ${1} for api jar."
 
-	mkdir -p temp_dir_manage_bom_jar
+	mkdir --parents temp_dir_manage_bom_jar
 
 	unzip -d temp_dir_manage_bom_jar -o -q "${1}"
 

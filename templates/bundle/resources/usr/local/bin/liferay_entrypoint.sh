@@ -4,7 +4,7 @@ source /usr/local/bin/_liferay_bundle_common.sh
 source /usr/local/bin/_liferay_common.sh
 
 function main {
-	echo "[LIFERAY] To SSH into this container, run: \"docker exec -it ${HOSTNAME} /bin/bash\"."
+	echo "[LIFERAY] To SSH into this container, run: \"docker exec --interactive --tty ${HOSTNAME} /bin/bash\"."
 	echo ""
 
 	if [[ "${DOCKER_TCMALLOC_ENABLED}" == "true" ]]

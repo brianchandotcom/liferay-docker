@@ -3,7 +3,7 @@
 function calculate_results {
 	rm --force --recursive "${RESULTS_DIR}"
 
-	mkdir -p "${RESULTS_DIR}"
+	mkdir --parents "${RESULTS_DIR}"
 
 	lcd document_library
 
@@ -16,7 +16,7 @@ function calculate_results {
 			continue
 		fi
 
-		mkdir -p "${RESULTS_DIR}/${company_id}"
+		mkdir --parents "${RESULTS_DIR}/${company_id}"
 
 		lcd "${pwd}/${company_id}/0"
 
@@ -31,7 +31,7 @@ function calculate_results {
 		do
 			if [[ "${repository_id}" -eq 0 ]] ||
 			   [ ! -d "${pwd}/${company_id}/${repository_id}" ] ||
-			   [[ $(find "${pwd}/${company_id}/${repository_id}" -maxdepth 1 -mindepth 1 | wc -l 2>/dev/null) -eq 0 ]]
+			   [[ $(find "${pwd}/${company_id}/${repository_id}" -maxdepth 1 -mindepth 1 | wc --lines 2>/dev/null) -eq 0 ]]
 			then
 				continue
 			fi
@@ -42,13 +42,13 @@ function calculate_results {
 			do
 				lcd "${pwd}/${company_id}/${repository_id}/${file_entry_id}"
 
-				if [[ $(find . -maxdepth 1 -mindepth 1 | wc -l) -gt 0 ]]
+				if [[ $(find . -maxdepth 1 -mindepth 1 | wc --lines) -gt 0 ]]
 				then
 					for file_version in *
 					do
 						local file_path="${company_id}/${repository_id}/${file_entry_id}/${file_version}"
 
-						local file_brief=$(file -b "${file_version}")
+						local file_brief=$(file --brief "${file_version}")
 
 						local type=${file_brief%% *}
 
@@ -61,10 +61,10 @@ function calculate_results {
 							then
 								type="LAR"
 
-								if [[ $(find "${file_version}" -ctime +29 | wc -l) -gt 0 ]]
+								if [[ $(find "${file_version}" -ctime +29 | wc --lines) -gt 0 ]]
 								then
 									echo "${file_path}" >> "${RESULTS_DIR}/${company_id}/lar_30_days"
-								elif [[ $(find "${file_version}" -ctime +6 | wc -l) -gt 0 ]]
+								elif [[ $(find "${file_version}" -ctime +6 | wc --lines) -gt 0 ]]
 								then
 									echo "${file_path}" >> "${RESULTS_DIR}/${company_id}/lar_7_days"
 								fi
@@ -108,14 +108,14 @@ function check_usage {
 }
 
 function get_regenerated_dir_size {
-	local size=$(du -s "${1}" 2>/dev/null)
+	local size=$(du --summarize "${1}" 2>/dev/null)
 
 	if [ -n "${size}" ]
 	then
 		size=$(echo "${size}" | sed --expression s/[^0-9]*//g)
 		size=$((size / 1024))
 
-		local count=$(find "${1}" -type f | wc -l)
+		local count=$(find "${1}" -type f | wc --lines)
 
 		echo "${1},${count},${count},${size},${size}"
 	fi
@@ -159,11 +159,11 @@ function print_results {
 
 			echo -en "${type},"
 
-			local count=$(wc -l "type_${type}" | sed --expression "s/\ .*//")
+			local count=$(wc --lines "type_${type}" | sed --expression "s/\ .*//")
 
 			echo -en "${count},"
 
-			local unique=$(sed --expression "s/.*\ //" < "type_${type}"| sort | uniq | wc -l)
+			local unique=$(sed --expression "s/.*\ //" < "type_${type}"| sort | uniq | wc --lines)
 
 			echo -en "${unique},"
 

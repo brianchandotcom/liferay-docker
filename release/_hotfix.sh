@@ -7,7 +7,7 @@ function add_file_to_hotfix {
 
 	local file_dir=$(dirname "${file_name}")
 
-	mkdir -p "${_BUILD_DIR}/hotfix/binaries/${file_dir}"
+	mkdir --parents "${_BUILD_DIR}/hotfix/binaries/${file_dir}"
 
 	cp "${_BUNDLES_DIR}/${1}" "${_BUILD_DIR}/hotfix/binaries/${file_dir}"
 }
@@ -26,12 +26,12 @@ function add_hotfix_testing_code {
 	then
 		echo "Running: git fetch upstream tag \"${LIFERAY_RELEASE_HOTFIX_TEST_TAG}\""
 
-		git fetch -v upstream tag "${LIFERAY_RELEASE_HOTFIX_TEST_TAG}" || return 1
+		git fetch --verbose upstream tag "${LIFERAY_RELEASE_HOTFIX_TEST_TAG}" || return 1
 	fi
 
-	echo "Running: git cherry-pick -n \"${LIFERAY_RELEASE_HOTFIX_TEST_SHA}\""
+	echo "Running: git cherry-pick --no-commit \"${LIFERAY_RELEASE_HOTFIX_TEST_SHA}\""
 
-	git cherry-pick -n "${LIFERAY_RELEASE_HOTFIX_TEST_SHA}" || return 1
+	git cherry-pick --no-commit "${LIFERAY_RELEASE_HOTFIX_TEST_SHA}" || return 1
 }
 
 function add_portal_patcher_properties_jar {
@@ -165,7 +165,7 @@ function compare_jars {
 	local jar_descriptions=$( (
 		describe_jar "${jar1}"
 		describe_jar "${jar2}"
-	) | sort | uniq -c)
+	) | sort | uniq --count)
 
 	if [ $(echo "${jar_descriptions}" | grep --count "Defl:N") -eq 0 ]
 	then
@@ -190,7 +190,7 @@ function compare_jars {
 
 		if (echo "${jar_descriptions}" | grep --quiet ".class")
 		then
-			mkdir -p "${_BUILD_DIR}/tmp/jar1" "${_BUILD_DIR}/tmp/jar2"
+			mkdir --parents "${_BUILD_DIR}/tmp/jar1" "${_BUILD_DIR}/tmp/jar2"
 
 			while IFS= read -r line
 			do
@@ -200,12 +200,12 @@ function compare_jars {
 
 					unzip -p "${jar1}" "${line}" > "${_BUILD_DIR}/tmp/jar1/${class_file_name}"
 
-					javap -c -private -verbose "${_BUILD_DIR}/tmp/jar1/${class_file_name}" | tail -n +4 > \
+					javap -c -private -verbose "${_BUILD_DIR}/tmp/jar1/${class_file_name}" | tail --lines +4 > \
 						"${_BUILD_DIR}/tmp/jar1/${class_file_name}.txt"
 
 					unzip -p "${jar2}" "${line}" > "${_BUILD_DIR}/tmp/jar2/${class_file_name}" 2>/dev/null
 
-					javap -c -private -verbose "${_BUILD_DIR}/tmp/jar2/${class_file_name}" 2>/dev/null | tail -n +4 > \
+					javap -c -private -verbose "${_BUILD_DIR}/tmp/jar2/${class_file_name}" 2>/dev/null | tail --lines +4 > \
 						"${_BUILD_DIR}/tmp/jar2/${class_file_name}.txt"
 
 					local diff_result=$(diff \
@@ -374,13 +374,13 @@ function create_documentation {
 function create_hotfix {
 	rm --force --recursive "${_BUILD_DIR}"/hotfix
 
-	mkdir -p "${_BUILD_DIR}"/hotfix
+	mkdir --parents "${_BUILD_DIR}"/hotfix
 
 	echo "Comparing ${_BUNDLES_DIR} and ${_RELEASE_DIR}."
 
-	diff -qr "${_BUNDLES_DIR}" "${_RELEASE_DIR}" | grep --invert-match /work/Catalina
+	diff --brief --recursive "${_BUNDLES_DIR}" "${_RELEASE_DIR}" | grep --invert-match /work/Catalina
 
-	diff -qr "${_BUNDLES_DIR}" "${_RELEASE_DIR}" | grep --invert-match /work/Catalina | while read -r change
+	diff --brief --recursive "${_BUNDLES_DIR}" "${_RELEASE_DIR}" | grep --invert-match /work/Catalina | while read -r change
 	do
 		if (echo "${change}" | grep "^Only in ${_RELEASE_DIR}" &>/dev/null)
 		then
@@ -503,7 +503,7 @@ function prepare_release_dir {
 
 	local release7z
 
-	if [ -e "${_TEST_RELEASE_DIR}" ] && [ $(find "${_TEST_RELEASE_DIR}" -type f -printf "%f\n" | wc -l) -eq 1 ]
+	if [ -e "${_TEST_RELEASE_DIR}" ] && [ $(find "${_TEST_RELEASE_DIR}" -type f -printf "%f\n" | wc --lines) -eq 1 ]
 	then
 		lc_cd "${_TEST_RELEASE_DIR}"
 
@@ -530,7 +530,7 @@ function prepare_release_dir {
 
 	rm --force --recursive "${_RELEASE_DIR}.tmp"
 
-	mkdir -p "${_RELEASE_DIR}.tmp"
+	mkdir --parents "${_RELEASE_DIR}.tmp"
 
 	lc_cd "${_RELEASE_DIR}.tmp"
 

@@ -25,7 +25,7 @@ function check_usage {
 
 	lc_cd "${_RELEASE_TOOL_DIR}"
 
-	mkdir -p release-data
+	mkdir --parents release-data
 
 	lc_cd release-data
 
@@ -46,7 +46,7 @@ function checkout_product_version {
 
 	git restore .
 
-	git tag -d "${_PRODUCT_VERSION}"
+	git tag --delete "${_PRODUCT_VERSION}"
 
 	git fetch --no-tags upstream "${_PRODUCT_VERSION}":"${_PRODUCT_VERSION}"
 
@@ -81,7 +81,7 @@ function main {
 
 	rm --force --recursive "${_BUILD_DIR}/release"
 
-	mkdir -p "${_BUILD_DIR}/release"
+	mkdir --parents "${_BUILD_DIR}/release"
 
 	lc_time_run package_boms
 

@@ -225,7 +225,7 @@ function upload_hotfix {
 	then
 		lc_log INFO "Connecting to lrdcom-vm-1."
 
-		ssh root@lrdcom-vm-1 mkdir -p "/www/releases.liferay.com/dxp/hotfix/${_PRODUCT_VERSION}/"
+		ssh root@lrdcom-vm-1 mkdir --parents "/www/releases.liferay.com/dxp/hotfix/${_PRODUCT_VERSION}/"
 
 		#
 		# shellcheck disable=SC2029
@@ -299,7 +299,7 @@ function upload_release {
 
 		ssh root@lrdcom-vm-1 rm --recursive "/www/releases.liferay.com/${LIFERAY_RELEASE_PRODUCT_NAME}/release-candidates/${_PRODUCT_VERSION}-*"
 
-		ssh root@lrdcom-vm-1 mkdir -p "/www/releases.liferay.com/${LIFERAY_RELEASE_PRODUCT_NAME}/release-candidates/${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}"
+		ssh root@lrdcom-vm-1 mkdir --parents "/www/releases.liferay.com/${LIFERAY_RELEASE_PRODUCT_NAME}/release-candidates/${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}"
 	else
 		lc_log INFO "Skipping lrdcom-vm-1."
 	fi
@@ -383,7 +383,7 @@ function _update_bundles_yml {
 
 	if is_7_4_ga_release
 	then
-		local ga_bundle_url="releases-cdn.liferay.com/portal/${_PRODUCT_VERSION}/"$(curl -fsSL "https://releases-cdn.liferay.com/portal/${_PRODUCT_VERSION}/.lfrrelease-tomcat-bundle")
+		local ga_bundle_url="releases-cdn.liferay.com/portal/${_PRODUCT_VERSION}/"$(curl --fail --location --show-error --silent "https://releases-cdn.liferay.com/portal/${_PRODUCT_VERSION}/.lfrrelease-tomcat-bundle")
 
 		perl -i -0777pe 's/\s+latest: true(?!7.4.13:)//' "${_PROJECTS_DIR}/liferay-docker/bundles.yml"
 
@@ -396,7 +396,7 @@ function _update_bundles_yml {
 	sed --in-place "/^$/d" "${_PROJECTS_DIR}/liferay-docker/bundles.yml"
 	sed --in-place "s/[[:space:]]{}//g" "${_PROJECTS_DIR}/liferay-docker/bundles.yml"
 
-	truncate -s -1 "${_PROJECTS_DIR}/liferay-docker/bundles.yml"
+	truncate --size -1 "${_PROJECTS_DIR}/liferay-docker/bundles.yml"
 
 	if [ -z "${LIFERAY_RELEASE_TEST_MODE}" ]
 	then

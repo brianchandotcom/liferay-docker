@@ -14,7 +14,7 @@ function check_usage {
 
 	while read -r image_name
 	do
-		if [ -z "$(docker images -q "${image_name}" 2> /dev/null)" ]
+		if [ -z "$(docker images --quiet "${image_name}" 2> /dev/null)" ]
 		then
 			lc_log ERROR "Unable to find ${image_name} locally."
 
@@ -28,7 +28,7 @@ function check_usage {
 
 	LIFERAY_COMMON_LOG_DIR="${_RELEASE_ROOT_DIR}/logs"
 
-	mkdir -p "${LIFERAY_COMMON_LOG_DIR}"
+	mkdir --parents "${LIFERAY_COMMON_LOG_DIR}"
 }
 
 function main {
@@ -104,7 +104,7 @@ function scan_docker_images {
 				--address "${console_url}" \
 				--docker-address "$(\
 					find \
-						/run/user/$(id -u) \
+						/run/user/$(id --user) \
 						-name docker.sock 2> /dev/null)" \
 				--password "${LIFERAY_PRISMA_CLOUD_SECRET}" \
 				--user "${LIFERAY_PRISMA_CLOUD_ACCESS_KEY}" \

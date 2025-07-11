@@ -3,7 +3,7 @@
 function init {
 	. /usr/local/bin/set_java_version.sh
 
-	mkdir -p /opt/liferay/job-queue
+	mkdir --parents /opt/liferay/job-queue
 }
 
 function main {
@@ -40,9 +40,9 @@ function register_crontab {
 function run_jobs {
 	while true
 	do
-		if [ $(ls /opt/liferay/job-queue | wc -l) -gt 0 ]
+		if [ $(ls /opt/liferay/job-queue | wc --lines) -gt 0 ]
 		then
-			local job=$(ls -tr /opt/liferay/job-queue | head -n 1)
+			local job=$(ls --reverse -t /opt/liferay/job-queue | head --lines 1)
 
 			rm "/opt/liferay/job-queue/${job}"
 

@@ -43,7 +43,7 @@ function main {
 
 	if [ -d "${LIFERAY_MOUNT_DIR}"/files ]
 	then
-		if [[ $(ls -A "${LIFERAY_MOUNT_DIR}"/files) ]]
+		if [[ $(ls --almost-all "${LIFERAY_MOUNT_DIR}"/files) ]]
 		then
 			echo "[LIFERAY] Copying files from ${LIFERAY_MOUNT_DIR}/files:"
 			echo ""
@@ -72,14 +72,14 @@ function main {
 
 	if [ -d "${LIFERAY_MOUNT_DIR}"/deploy ]
 	then
-		if [[ $(ls -A /opt/liferay/deploy) ]]
+		if [[ $(ls --almost-all /opt/liferay/deploy) ]]
 		then
 			cp /opt/liferay/deploy/* "${LIFERAY_MOUNT_DIR}"/deploy
 		fi
 
 		rm --force --recursive /opt/liferay/deploy
 
-		ln -s "${LIFERAY_MOUNT_DIR}"/deploy /opt/liferay/deploy
+		ln --symbolic "${LIFERAY_MOUNT_DIR}"/deploy /opt/liferay/deploy
 
 		echo "[LIFERAY] The directory /mnt/liferay/deploy is ready. Copy files to \$(pwd)/xyz123/deploy on the host operating system to deploy modules to ${LIFERAY_PRODUCT_NAME} at runtime."
 		echo ""

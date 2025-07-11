@@ -48,10 +48,10 @@ function main {
 
 	local oauth2_token_response=$(\
 		curl \
-			-H "Content-type: application/x-www-form-urlencoded" \
-			-X POST \
-			-d "client_id=${oauth2_client_id}&client_secret=${oauth2_client_secret}&grant_type=client_credentials" \
-			-s \
+			--data "client_id=${oauth2_client_id}&client_secret=${oauth2_client_secret}&grant_type=client_credentials" \
+			--header "Content-type: application/x-www-form-urlencoded" \
+			--request POST \
+			--silent \
 			${LIFERAY_BATCH_CURL_OPTIONS} \
 			"${lxc_dxp_server_protocol}://${lxc_dxp_main_domain}${oauth2_token_uri}" \
 		| jq --raw-output ".")
@@ -85,13 +85,13 @@ function main {
 
 		local put_response=$(\
 			curl \
-				-H "Accept: application/json" \
-				-H "Authorization: Bearer ${oauth2_access_token}" \
-				-H "Content-Type: multipart/form-data" \
-				-X PUT \
-				-F "file=@/opt/liferay/site-initializer/site-initializer.zip;type=application/zip" \
-				-F "site=${site}" \
-				-s \
+				--form "file=@/opt/liferay/site-initializer/site-initializer.zip;type=application/zip" \
+				--form "site=${site}" \
+				--header "Accept: application/json" \
+				--header "Authorization: Bearer ${oauth2_access_token}" \
+				--header "Content-Type: multipart/form-data" \
+				--request PUT \
+				--silent \
 				${LIFERAY_BATCH_CURL_OPTIONS} \
 				"${lxc_dxp_server_protocol}://${lxc_dxp_main_domain}${href}${external_reference_code}" \
 			| jq --raw-output ".")
@@ -107,7 +107,7 @@ function main {
 		fi
 	fi
 
-	find /opt/liferay/batch -type f -name "*.batch-engine-data.json" -print0 2> /dev/null | LC_ALL=C sort -z |
+	find /opt/liferay/batch -type f -name "*.batch-engine-data.json" -print0 2> /dev/null | LC_ALL=C sort --zero-terminated |
 	while IFS= read -r -d "" file_name
 	do
 		echo "Processing: ${file_name}"
@@ -153,12 +153,12 @@ function main {
 
 		local post_response=$(\
 			curl \
-				-H "Accept: application/json" \
-				-H "Authorization: Bearer ${oauth2_access_token}" \
-				-H "Content-Type: application/json" \
-				-X POST \
-				-d @/tmp/liferay_batch_entrypoint.items.json \
-				-s \
+				--data @/tmp/liferay_batch_entrypoint.items.json \
+				--header "Accept: application/json" \
+				--header "Authorization: Bearer ${oauth2_access_token}" \
+				--header "Content-Type: application/json" \
+				--request POST \
+				--silent \
 				${LIFERAY_BATCH_CURL_OPTIONS} \
 				"${lxc_dxp_server_protocol}://${lxc_dxp_main_domain}${href}${parameters}" \
 			| jq --raw-output ".")
@@ -183,13 +183,13 @@ function main {
 		do
 			local status_response=$(\
 				curl \
-					-s \
+					--header "Authorization: Bearer ${oauth2_access_token}" \
+					--header "accept: application/json" \
+					--request GET \
+					--silent \
 					${LIFERAY_BATCH_CURL_OPTIONS} \
-					-X 'GET' \
 					"${lxc_dxp_server_protocol}://${lxc_dxp_main_domain}/o/headless-batch-engine/v1.0/import-task/by-external-reference-code/${external_reference_code}" \
-					-H "accept: application/json" \
-					-H "Authorization: Bearer ${oauth2_access_token}" \
-				| jq --raw-output '.')
+				| jq --raw-output ".")
 
 			status=$(jq --raw-output '.executeStatus//.status' <<< "${status_response}")
 

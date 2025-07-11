@@ -34,7 +34,7 @@ function clean_up_test_directory {
 function generate_thread_dump {
 	if [ "${TEST_RESULT}" -gt 0 ]
 	then
-		docker exec -it "${CONTAINER_ID}" /usr/local/bin/generate_thread_dump.sh
+		docker exec --interactive --tty "${CONTAINER_ID}" /usr/local/bin/generate_thread_dump.sh
 
 		docker cp "${CONTAINER_ID}":/opt/liferay/data/sre/thread_dumps "${PWD}/${LIFERAY_DOCKER_LOGS_DIR}"
 	fi
@@ -88,11 +88,11 @@ function main {
 function prepare_mount {
 	TEST_DIR=temp-test-$(date "$(date)" "+%Y%m%d%H%M")
 
-	mkdir -p "${TEST_DIR}"
+	mkdir --parents "${TEST_DIR}"
 
 	cp --recursive templates/test/resources/* "${TEST_DIR}"
 
-	mkdir -p "${TEST_DIR}/mnt/liferay/patching"
+	mkdir --parents "${TEST_DIR}/mnt/liferay/patching"
 
 	if [ -n "${LIFERAY_DOCKER_TEST_PATCHING_TOOL_URL}" ]
 	then
@@ -119,7 +119,7 @@ function prepare_mount {
 
 	if [ -e "${TEST_DIR}/mnt/liferay/scripts" ]
 	then
-		chmod -R +x "${TEST_DIR}/mnt/liferay/scripts"
+		chmod --recursive +x "${TEST_DIR}/mnt/liferay/scripts"
 	fi
 }
 
@@ -162,7 +162,7 @@ function start_container {
 		fi
 	fi
 
-	CONTAINER_ID=$(docker run -d ${parameters} "${LIFERAY_DOCKER_IMAGE_ID}")
+	CONTAINER_ID=$(docker run --detach ${parameters} "${LIFERAY_DOCKER_IMAGE_ID}")
 
 	if [ ! -n "${LIFERAY_DOCKER_NETWORK_NAME}" ]
 	then
@@ -188,10 +188,10 @@ function test_docker_image_files {
 function test_docker_image_fix_pack_installed {
 	if [ -n "${LIFERAY_DOCKER_TEST_INSTALLED_PATCHES}" ]
 	then
-		local correct_fix_pack=$(echo "${LIFERAY_DOCKER_TEST_INSTALLED_PATCHES}" | tr -d '[:space:]')
-		local output=$(docker exec -it "${CONTAINER_ID}" /opt/liferay/patching-tool/patching-tool.sh info | grep "Currently installed patches:")
+		local correct_fix_pack=$(echo "${LIFERAY_DOCKER_TEST_INSTALLED_PATCHES}" | tr --delete '[:space:]')
+		local output=$(docker exec --interactive --tty "${CONTAINER_ID}" /opt/liferay/patching-tool/patching-tool.sh info | grep "Currently installed patches:")
 
-		local installed_fix_pack=$(echo "${output##*: }" | tr -d '[:space:]')
+		local installed_fix_pack=$(echo "${output##*: }" | tr --delete '[:space:]')
 
 		if [ "${correct_fix_pack}" == "${installed_fix_pack}" ]
 		then
@@ -270,7 +270,7 @@ function test_health_status {
 function test_page {
 	local content
 
-	content=$(curl --fail --max-time 60 -s --show-error -L "${1}")
+	content=$(curl --fail --location --max-time 60 --show-error --silent "${1}")
 
 	local exit_code=$?
 

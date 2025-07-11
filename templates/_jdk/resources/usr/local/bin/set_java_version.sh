@@ -13,7 +13,7 @@ function create_symlink {
 
 	if [ -n "${target_dir}" ] && [ ! -e "/usr/lib/jvm/${2//-/}" ]
 	then
-		ln -sf ${target_dir} "/usr/lib/jvm/${2//-/}"
+		ln --force --symbolic ${target_dir} "/usr/lib/jvm/${2//-/}"
 	fi
 }
 
@@ -23,13 +23,13 @@ function main {
 		if [ ! -e "/usr/lib/jvm/${JAVA_VERSION}" ]
 		then
 			local architecture=$(dpkg --print-architecture)
-			local zulu_version=$(echo "${JAVA_VERSION}" | tr -dc '0-9')
+			local zulu_version=$(echo "${JAVA_VERSION}" | tr --complement --delete '0-9')
 
 			create_symlink "${architecture}" "zulu-${zulu_version}"
 			update-java-alternatives -s zulu-"${zulu_version}"-"${architecture}"
 		fi
 
-		local zulu_jdks=$(ls /usr/lib/jvm/ | grep "zulu-.*-.*" | awk -F- '{print $1$2}' | paste -s -d "," | sed "s/,/, /g")
+		local zulu_jdks=$(ls /usr/lib/jvm/ | grep "zulu-.*-.*" | awk -F '-' '{print $1$2}' | paste --delimiters ',' --serial | sed "s/,/, /g")
 
 		if [ -e "/usr/lib/jvm/${JAVA_VERSION}" ]
 		then

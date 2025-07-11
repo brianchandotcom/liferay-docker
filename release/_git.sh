@@ -22,7 +22,7 @@ function clone_repository {
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
 
-	mkdir -p "${_PROJECTS_DIR}"
+	mkdir --parents "${_PROJECTS_DIR}"
 
 	lc_cd "${_PROJECTS_DIR}"
 
@@ -107,7 +107,7 @@ function generate_release_notes {
 		grep --invert-match LRQA | \
 		grep --invert-match POSHI | \
 		grep --invert-match RELEASE | \
-		paste -sd, > "${_BUILD_DIR}/release/release-notes.txt"
+		paste --delimiters ',' --serial > "${_BUILD_DIR}/release/release-notes.txt"
 }
 
 function prepare_branch_to_commit {
@@ -169,7 +169,7 @@ function update_portal_repository {
 	then
 		lc_log INFO "Looking for a tag that matches Git SHA ${LIFERAY_RELEASE_GIT_REF}."
 
-		LIFERAY_RELEASE_GIT_REF=$(git ls-remote upstream | grep "${LIFERAY_RELEASE_GIT_REF}" | grep refs/tags/fix-pack-fix- | head -n 1 | sed --expression "s#.*/##")
+		LIFERAY_RELEASE_GIT_REF=$(git ls-remote upstream | grep "${LIFERAY_RELEASE_GIT_REF}" | grep refs/tags/fix-pack-fix- | head --lines 1 | sed --expression "s#.*/##")
 
 		if [ -n "${LIFERAY_RELEASE_GIT_REF}" ]
 		then

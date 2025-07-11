@@ -219,7 +219,7 @@ function lc_download {
 
 	local cache_file_dir="$(dirname "${cache_file}")"
 
-	mkdir -p "${cache_file_dir}"
+	mkdir --parents "${cache_file_dir}"
 
 	lc_log DEBUG "Downloading ${file_url}."
 
@@ -299,7 +299,7 @@ function lc_get_property {
 
 		echo "${property_value##*: }"
 	else
-		local property_value=$(sed --regexp-extended "s/\\\r?\n[ \t]*//g" -z < "${file}" | grep --fixed-strings "${property_key}=")
+		local property_value=$(sed --null-data --regexp-extended "s/\\\r?\n[ \t]*//g" < "${file}" | grep --fixed-strings "${property_key}=")
 
 		echo "${property_value##*=}"
 	fi
@@ -331,7 +331,7 @@ function lc_time_run {
 
 	if [ -n "${LIFERAY_COMMON_LOG_DIR}" ]
 	then
-		mkdir -p "${LIFERAY_COMMON_LOG_DIR}"
+		mkdir --parents "${LIFERAY_COMMON_LOG_DIR}"
 
 		local log_file="${LIFERAY_COMMON_LOG_DIR}/log_${LIFERAY_COMMON_START_TIME}_step_$(lc_next_step)_${run_id}.txt"
 	fi
@@ -365,7 +365,7 @@ function lc_time_run {
 			then
 				echo "Full log file is at ${log_file}. Printing the last 100 lines:"
 
-				tail -n 100 "${log_file}"
+				tail --lines 100 "${log_file}"
 			fi
 
 			if (declare -F lc_time_run_error &>/dev/null)
@@ -423,7 +423,7 @@ function _lc_init {
 	LIFERAY_COMMON_EXIT_CODE_OK=0
 	LIFERAY_COMMON_EXIT_CODE_SKIPPED=4
 
-	if (locale -a | grep --quiet en_US.utf8)
+	if (locale --all-locales | grep --quiet en_US.utf8)
 	then
 		export LC_ALL=en_US.utf8
 	else
