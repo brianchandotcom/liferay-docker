@@ -193,7 +193,7 @@ function get_latest_tomcat_version {
 		--silent \
 		| grep --only-matching --perl-regexp "${tomcat_major_version}\.\d+\.\d+" \
 		| sort --version-sort \
-		| tail --lines=1)
+		| tail --lines 1)
 
 	if [ -z "${latest_tomcat_version}" ]
 	then

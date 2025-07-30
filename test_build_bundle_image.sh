@@ -21,7 +21,7 @@ function set_up {
 		--silent \
 		| grep --only-matching --perl-regexp "9\.\d+\.\d+" \
 		| sort --version-sort \
-		| tail --lines=1)
+		| tail --lines 1)
 }
 
 function tear_down {
@@ -42,7 +42,7 @@ function test_build_bundle_image_get_latest_tomcat_version {
 		--silent \
 		| grep --only-matching --perl-regexp "10\.\d+\.\d+" \
 		| sort --version-sort \
-		| tail --lines=1)
+		| tail --lines 1)
 
 	_test_build_bundle_image_get_latest_tomcat_version "10.1.40" "" "${_LATEST_TOMCAT_VERSION_TEST}"
 	_test_build_bundle_image_get_latest_tomcat_version "10.1.41" "10.1.9999" "10.1.9999"
