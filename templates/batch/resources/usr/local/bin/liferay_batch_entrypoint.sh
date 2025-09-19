@@ -1,5 +1,37 @@
 #!/bin/bash
 
+function check_http_code {
+	local http_code="$1"
+
+	if [ "$http_code" == "000" ]
+	then
+		echo "Error executing curl command. Please check arguments."
+		return 1
+	elif [ "$http_code" -ge 400 ]
+	then
+		if [ "$http_code" -eq 400 ]
+		then
+			echo "HTTP 400 Bad Request. Please check Liferay logs for more information."
+		elif [ "$http_code" -eq 401 ]
+		then
+			echo "HTTP 401 Unauthorized. If this was a token request, please check Liferay configuration to all /o/oauth2/token route to be public."
+		elif [ "$http_code" -eq 403 ]
+		then
+			echo "HTTP 403 Forbidden. You do not have permission to access this resource.  If this was a resource request, please check the OAuth scopes for this application to ensure it has proper permissions."
+		elif [ "$http_code" -eq 404 ]
+		then
+			echo "The requested resource could not be found."
+		elif [ "$http_code" -eq 405 ]
+		then
+			echo "The method specified in the request is not allowed."
+		elif [ "$http_code" -eq 500 ]
+		then
+			echo "There was an internal server error. Please check Liferay logs for more information."
+		fi
+		return 1
+	fi
+}
+
 function main {
 	if [ ! -n "${LIFERAY_BATCH_OAUTH_APP_ERC}" ]
 	then
@@ -46,15 +78,22 @@ function main {
 	echo "OAuth Token URI: ${oauth2_token_uri}"
 	echo ""
 
+	local http_code_output=$(mktemp)
+
 	local oauth2_token_response=$(\
 		curl \
 			-H "Content-type: application/x-www-form-urlencoded" \
 			-X POST \
 			-d "client_id=${oauth2_client_id}&client_secret=${oauth2_client_secret}&grant_type=client_credentials" \
 			-s \
+			-w "%output{$http_code_output}%{http_code}" \
 			${LIFERAY_BATCH_CURL_OPTIONS} \
-			"${lxc_dxp_server_protocol}://${lxc_dxp_main_domain}${oauth2_token_uri}" \
-		| jq --raw-output ".")
+			"${lxc_dxp_server_protocol}://${lxc_dxp_main_domain}${oauth2_token_uri}")
+
+	check_http_code "$(cat $http_code_output)" || {
+		echo "Unable to get OAuth 2 token response: ${oauth2_token_response}"
+		exit 1
+	}
 
 	echo "OAuth Token Response: ${oauth2_token_response}"
 	echo ""
@@ -83,6 +122,8 @@ function main {
 
 		local external_reference_code=$(jq --raw-output ".externalReferenceCode" <<< "${site}")
 
+		local http_code_output=$(mktemp)
+
 		local put_response=$(\
 			curl \
 				-H "Accept: application/json" \
@@ -92,16 +133,21 @@ function main {
 				-F "file=@/opt/liferay/site-initializer/site-initializer.zip;type=application/zip" \
 				-F "site=${site}" \
 				-s \
+				-w "%output{$http_code_output}%{http_code}" \
 				${LIFERAY_BATCH_CURL_OPTIONS} \
-				"${lxc_dxp_server_protocol}://${lxc_dxp_main_domain}${href}${external_reference_code}" \
-			| jq --raw-output ".")
+				"${lxc_dxp_server_protocol}://${lxc_dxp_main_domain}${href}${external_reference_code}")
+
+		check_http_code "$(cat $http_code_output)" || {
+			echo "Unable to PUT resource: ${put_response}"
+			exit 1
+		}
 
 		echo "PUT Response: ${put_response}"
 		echo ""
 
 		if [ ! -n "${put_response}" ]
 		then
-			echo "Received invalid PUT response."
+			echo "Received empty PUT response. Please check Liferay logs for more information."
 
 			exit 1
 		fi
@@ -151,6 +197,8 @@ function main {
 
 		echo "Parameters: ${parameters}"
 
+		local http_code_output=$(mktemp)
+
 		local post_response=$(\
 			curl \
 				-H "Accept: application/json" \
@@ -159,16 +207,21 @@ function main {
 				-X POST \
 				-d @/tmp/liferay_batch_entrypoint.items.json \
 				-s \
+				-w "%output{$http_code_output}%{http_code}" \
 				${LIFERAY_BATCH_CURL_OPTIONS} \
-				"${lxc_dxp_server_protocol}://${lxc_dxp_main_domain}${href}${parameters}" \
-			| jq --raw-output ".")
+				"${lxc_dxp_server_protocol}://${lxc_dxp_main_domain}${href}${parameters}")
+
+		check_http_code "$(cat $http_code_output)" || {
+			echo "Unable to POST resource: ${post_response}"
+			exit 1
+		}
 
 		echo "POST Response: ${post_response}"
 		echo ""
 
 		if [ ! -n "${post_response}" ]
 		then
-			echo "Received invalid POST response."
+			echo "Received empty POST response. Please check Liferay logs for more information."
 
 			rm /tmp/liferay_batch_entrypoint.items.json
 
@@ -181,15 +234,22 @@ function main {
 
 		until [ "${status}" == "COMPLETED" ] || [ "${status}" == "FAILED" ] || [ "${status}" == "NOT_FOUND" ]
 		do
+			local http_code_output=$(mktemp)
+
 			local status_response=$(\
 				curl \
-					-s \
-					${LIFERAY_BATCH_CURL_OPTIONS} \
-					-X 'GET' \
-					"${lxc_dxp_server_protocol}://${lxc_dxp_main_domain}/o/headless-batch-engine/v1.0/import-task/by-external-reference-code/${external_reference_code}" \
 					-H "accept: application/json" \
 					-H "Authorization: Bearer ${oauth2_access_token}" \
-				| jq --raw-output '.')
+					-X 'GET' \
+					-s \
+					-w "%output{$http_code_output}%{http_code}" \
+					${LIFERAY_BATCH_CURL_OPTIONS} \
+					"${lxc_dxp_server_protocol}://${lxc_dxp_main_domain}/o/headless-batch-engine/v1.0/import-task/by-external-reference-code/${external_reference_code}")
+
+			check_http_code "$(cat $http_code_output)" || {
+				echo "Unable to get status for import task with external reference code ${external_reference_code}: ${status_response}"
+				exit 1
+			}
 
 			status=$(jq --raw-output '.executeStatus//.status' <<< "${status_response}")
 
@@ -200,6 +260,7 @@ function main {
 
 		if [ "${status}" == "FAILED" ]
 		then
+			echo "Batch import task process failed. Please check Liferay logs for more information."
 			exit 1
 		fi
 	done
