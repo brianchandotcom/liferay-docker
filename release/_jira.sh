@@ -97,6 +97,37 @@ function add_jira_issue_comment_with_mention {
 	_invoke_jira_api "https://liferay.atlassian.net/rest/api/3/issue/${2}/comment" "${data}"
 }
 
+function add_jira_issue_with_description {
+	local data=$(jq \
+		--arg component "${1}" \
+		--arg description "${2}" \
+		--arg duedate "${3}" \
+		--arg issuetype "${4}" \
+		--arg project "${5}" \
+		--arg summary "${6}" \
+		--null-input \
+		"{
+			fields: {
+				components: [
+					{
+						name: \$component
+					}
+				],
+				description: \$description,
+				duedate: \$duedate,
+				issuetype: {
+					name: \$issuetype
+				},
+				project: {
+					key: \$project
+				},
+				summary: \$summary
+			}
+		}")
+
+	_invoke_jira_api "https://liferay.atlassian.net/rest/api/2/issue/" "${data}"
+}
+
 function _invoke_jira_api {
 	local http_response=$(curl \
 		"${1}" \
