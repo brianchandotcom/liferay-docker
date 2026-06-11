@@ -8,7 +8,10 @@ author.
 It applies to every `*.sh` file in the repository, including executables,
 internal (`_`-prefixed) helpers, and test files. When the rules here and the
 existing code disagree, this document wins and the code should be updated to
-match. Adherence is enforced by a dedicated code-style Claude skill.
+match. To apply these rules, run the [`format-bash-code`](skills/format-bash-code/SKILL.md)
+Claude skill: invoke `/format-bash-code` with no arguments to format the `*.sh`
+files you have modified locally, or pass file or folder paths to format those
+targets instead.
 
 ## Table of Contents
 
