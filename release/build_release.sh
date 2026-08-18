@@ -298,7 +298,7 @@ function print_help {
 	echo ""
 	echo "The script reads the following environment variables:"
 	echo ""
-	echo "    LIFERAY_CMS_STANDALONE_RELEASE (optional): Set this to \"true\" to build the CMS standalone bundle instead of a regular release"
+	echo "    LIFERAY_CMS_STANDALONE_RELEASE (optional): Set this to \"true\" to build the CMS standalone bundle instead of a regular release."
 	echo "    LIFERAY_RELEASE_DEVELOPER_MODE (optional): Set this to \"true\" to run the script as a local development build. Forces LIFERAY_RELEASE_UPLOAD to \"false\"."
 	echo "    LIFERAY_RELEASE_GCS_TOKEN (optional): *.json file containing the token to authenticate with Google Cloud Storage"
 	echo "    LIFERAY_RELEASE_GENERAL_AVAILABILITY_DATE (optional): General availability date"
