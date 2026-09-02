@@ -72,10 +72,10 @@ function test_build_all_images_is_container_healthy {
 
 function test_build_all_images_latest_is_not_slim {
 	assert_equals \
-		$(docker images --format "{{.Repository}}:{{.Tag}}" "liferay/dxp:${1}") \
+		"$(docker images --format "{{.Repository}}:{{.Tag}}" "liferay/dxp:${1}")" \
 		"liferay/dxp:${1}" \
-		$(docker images --filter "reference=liferay/dxp:${1}" --format "{{.ID}}") \
-		$(docker images --filter "reference=liferay/dxp:latest" --format "{{.ID}}")
+		"$(docker images --filter "reference=liferay/dxp:${1}" --format "{{.ID}}")" \
+		"$(docker images --filter "reference=liferay/dxp:latest" --format "{{.ID}}")"
 }
 
 function test_build_all_images_trial_license_is_deleted {
@@ -88,14 +88,14 @@ function _test_build_all_images_get_latest_available_zulu_version {
 
 	assert_equals \
 		"${latest_available_zulu_version}" \
-		$( \
+		"$( \
 			curl \
 				--header 'accept: */*' \
 				--location \
 				--silent \
 				"https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?arch=${1}&bundle_type=jdk&ext=deb&hw_bitness=64&javafx=false&java_version=${2}&os=linux" | \
 			jq --raw-output '.zulu_version | join(".")' | \
-			cut --delimiter='.' --fields=1,2,3)
+			cut --delimiter='.' --fields=1,2,3)"
 }
 
 function _test_build_all_images_has_slim_build_criteria {
