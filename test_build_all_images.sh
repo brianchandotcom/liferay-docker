@@ -22,7 +22,7 @@ function main {
 
 		test_build_all_images_get_latest_available_zulu_version
 		test_build_all_images_has_slim_build_criteria
-		test_build_all_images_latest_is_not_slim "${_LATEST_RELEASE}"
+		test_build_all_images_latest_is_not_slim
 		test_build_all_images_trial_license_is_deleted
 	fi
 
@@ -72,9 +72,9 @@ function test_build_all_images_is_container_healthy {
 
 function test_build_all_images_latest_is_not_slim {
 	assert_equals \
-		"$(docker images --format "{{.Repository}}:{{.Tag}}" "liferay/dxp:${1}")" \
-		"liferay/dxp:${1}" \
-		"$(docker images --filter "reference=liferay/dxp:${1}" --format "{{.ID}}")" \
+		"$(docker images --format "{{.Repository}}:{{.Tag}}" "liferay/dxp:${_LATEST_RELEASE}")" \
+		"liferay/dxp:${_LATEST_RELEASE}" \
+		"$(docker images --filter "reference=liferay/dxp:${_LATEST_RELEASE}" --format "{{.ID}}")" \
 		"$(docker images --filter "reference=liferay/dxp:latest" --format "{{.ID}}")"
 }
 
