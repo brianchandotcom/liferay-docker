@@ -119,6 +119,7 @@ function _test_build_all_images_trial_license_is_deleted {
 		docker run \
 			--entrypoint bash \
 			--env LIFERAY_CONTAINER_DISABLE_TRIAL_LICENSE="${2}" \
+			--network none \
 			--rm \
 			"liferay/dxp:${1}" \
 			-c 'configure_liferay.sh &> /dev/null
