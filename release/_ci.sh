@@ -17,7 +17,7 @@ function trigger_ci_test_suite {
 			return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 		fi
 
-		local release_url="https://storage.cloud.google.com/liferay-releases-candidates/${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}/"
+		local release_url="https://storage.cloud.google.com/$(get_release_candidates_dir_name)/${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}/"
 
 		for ci_slave_number in {41..48}
 		do
