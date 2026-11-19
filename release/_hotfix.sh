@@ -200,7 +200,8 @@ function compare_jars {
 		do
 			if echo "${jar_descriptions}" | grep --quiet "${packaged_file}"
 			then
-				if compare_property_in_packaged_file "${jar1}" "${jar2}" "${packaged_file}" "Export-Package"
+				if compare_property_in_packaged_file "${jar1}" "${jar2}" "${packaged_file}" "Export-Package" &&
+				   compare_property_in_packaged_file "${jar1}" "${jar2}" "${packaged_file}" "Import-Package"
 				then
 					jar_descriptions=$(echo "${jar_descriptions}" | sed --expression "\#${packaged_file}#d")
 				fi
@@ -276,7 +277,8 @@ function compare_jars {
 					do
 						if echo "${packaged_jar_descriptions}" | grep --quiet "${packaged_file}"
 						then
-							if compare_property_in_packaged_file "${_BUILD_DIR}/tmp/jar1/${nested_jar_file_name}" "${_BUILD_DIR}/tmp/jar2/${nested_jar_file_name}" "${packaged_file}" "Export-Package"
+							if compare_property_in_packaged_file "${_BUILD_DIR}/tmp/jar1/${nested_jar_file_name}" "${_BUILD_DIR}/tmp/jar2/${nested_jar_file_name}" "${packaged_file}" "Export-Package" &&
+							   compare_property_in_packaged_file "${_BUILD_DIR}/tmp/jar1/${nested_jar_file_name}" "${_BUILD_DIR}/tmp/jar2/${nested_jar_file_name}" "${packaged_file}" "Import-Package"
 							then
 								packaged_jar_descriptions=$(echo "${packaged_jar_descriptions}" | sed --expression "\#${packaged_file}#d")
 							fi
