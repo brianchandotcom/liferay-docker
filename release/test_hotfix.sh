@@ -31,6 +31,11 @@ function set_up {
 	_create_portal_bootstrap_jar "${_BUNDLES_DIR}/osgi/modules/com.liferay.test.portal.bootstrap.rebuilt.jar" "1772646599999" "2.17.1"
 	_create_portal_bootstrap_jar "${_RELEASE_DIR}/osgi/modules/com.liferay.test.portal.bootstrap.changed.jar" "1772646511768" "2.17.1"
 	_create_portal_bootstrap_jar "${_RELEASE_DIR}/osgi/modules/com.liferay.test.portal.bootstrap.rebuilt.jar" "1772646511768" "2.17.1"
+
+	_create_spring_extender_jar "${_BUNDLES_DIR}/osgi/modules/com.liferay.test.spring.extender.changed.jar" "1772646511768" "org.springframework.jndi"
+	_create_spring_extender_jar "${_BUNDLES_DIR}/osgi/modules/com.liferay.test.spring.extender.rebuilt.jar" "1772646599999" "org.springframework.jms.config,org.springframework.jndi"
+	_create_spring_extender_jar "${_RELEASE_DIR}/osgi/modules/com.liferay.test.spring.extender.changed.jar" "1772646511768" "org.springframework.jms.config,org.springframework.jndi"
+	_create_spring_extender_jar "${_RELEASE_DIR}/osgi/modules/com.liferay.test.spring.extender.rebuilt.jar" "1772646511768" "org.springframework.jms.config,org.springframework.jndi"
 }
 
 function tear_down {
@@ -47,6 +52,8 @@ function test_hotfix_compare_jars {
 	_test_hotfix_compare_jars "osgi/modules/com.liferay.test.portal.bootstrap.changed.jar" "0"
 	_test_hotfix_compare_jars "osgi/modules/com.liferay.test.portal.bootstrap.rebuilt.jar" "1"
 	_test_hotfix_compare_jars "osgi/modules/com.liferay.test.rebuilt.impl.jar" "1"
+	_test_hotfix_compare_jars "osgi/modules/com.liferay.test.spring.extender.changed.jar" "0"
+	_test_hotfix_compare_jars "osgi/modules/com.liferay.test.spring.extender.rebuilt.jar" "1"
 }
 
 function test_hotfix_prepare_release_dir {
@@ -98,6 +105,22 @@ function _create_portal_bootstrap_jar {
 	) > "${jar_dir}/META-INF/system.packages.extra.mf"
 
 	jar cf "${1}" -C "${jar_dir}" META-INF/system.packages.extra.mf
+
+	rm --force --recursive "${jar_dir}"
+}
+
+function _create_spring_extender_jar {
+	local jar_dir=$(mktemp --directory)
+
+	(
+		echo "Bnd-LastModified: ${2}"
+		echo "Import-Package: ${3}"
+	) > "${jar_dir}/manifest"
+
+	jar \
+		--create \
+		--file "${1}" \
+		--manifest "${jar_dir}/manifest"
 
 	rm --force --recursive "${jar_dir}"
 }
