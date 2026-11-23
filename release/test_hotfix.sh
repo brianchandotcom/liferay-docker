@@ -82,13 +82,24 @@ function _create_module_jar {
 
 	mkdir --parents "${module_jar_dir}/lib"
 
-	jar cfm "${module_jar_dir}/lib/internal.jar" "${packaged_jar_dir}/manifest" -C "${packaged_jar_dir}" internal.txt
+	jar \
+		--create \
+		--file "${module_jar_dir}/lib/internal.jar" \
+		--manifest "${packaged_jar_dir}/manifest" \
+		-C "${packaged_jar_dir}" \
+		internal.txt
 
 	echo "external content" > "${module_jar_dir}/external.txt"
 
 	touch --date "2020-01-01 00:00:00" "${module_jar_dir}/external.txt" "${module_jar_dir}/lib/internal.jar"
 
-	jar cf "${1}" -C "${module_jar_dir}" external.txt -C "${module_jar_dir}" lib/internal.jar
+	jar \
+		--create \
+		--file "${1}" \
+		-C "${module_jar_dir}" \
+		external.txt \
+		-C "${module_jar_dir}" \
+		lib/internal.jar
 
 	rm --force --recursive "${module_jar_dir}" "${packaged_jar_dir}"
 }
@@ -104,7 +115,11 @@ function _create_portal_bootstrap_jar {
 		echo " che.logging.log4j.spi;version=\"${3}\""
 	) > "${jar_dir}/META-INF/system.packages.extra.mf"
 
-	jar cf "${1}" -C "${jar_dir}" META-INF/system.packages.extra.mf
+	jar \
+		--create \
+		--file "${1}" \
+		-C "${jar_dir}" \
+		META-INF/system.packages.extra.mf
 
 	rm --force --recursive "${jar_dir}"
 }
